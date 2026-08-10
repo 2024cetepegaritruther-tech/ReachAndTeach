@@ -1,54 +1,577 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reach and Teach</title>
+
+    <title>Reach & Teach | Holy Trinity College</title>
 
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-    <header>
-        <h2>Holy Trinity College</h2>
-    </header>
+    <!-- =========================
+         NAVIGATION
+    ========================== -->
 
-    <main class="hero">
-        <div class="content">
+    <header class="navbar">
 
-            <div class="logo">
+        <div class="brand">
+
+            <div class="brand-logo">
                 R&T
             </div>
 
-            <h1>REACH AND TEACH</h1>
+            <div class="brand-text">
+                <h2>Reach & Teach</h2>
+                <span>Holy Trinity College</span>
+            </div>
 
-            <h2>
-                Online Guidance Counseling and
-                Student Mood Monitoring System
-            </h2>
+        </div>
 
-            <p>
-                Welcome to Reach and Teach!
-                A safe and supportive platform designed
-                to help students connect with guidance
-                counseling services and monitor their mood.
-            </p>
 
-            <button onclick="getStarted()">
-                Get Started
+        <nav class="navigation">
+
+            <a href="#home" class="active">Home</a>
+            <a href="#about">About</a>
+            <a href="#services">Services</a>
+            <a href="#contact">Contact</a>
+
+        </nav>
+
+
+        <div class="nav-actions">
+
+            <button
+                class="theme-button"
+                id="themeToggle"
+                title="Toggle dark mode">
+                🌙
+            </button>
+
+            <button
+                class="nav-call"
+                onclick="openChat()">
+                Reserve a Call
             </button>
 
         </div>
+
+    </header>
+
+
+
+    <!-- =========================
+         HERO SECTION
+    ========================== -->
+
+    <main id="home" class="hero">
+
+        <!-- Background shapes -->
+        <div class="shape shape-one"></div>
+        <div class="shape shape-two"></div>
+
+
+        <!-- LEFT SIDE -->
+
+        <section class="hero-content">
+
+            <div class="badge">
+                ✦ Student Guidance & Wellness
+            </div>
+
+
+            <h1>
+                Your Well-being
+                <span>Matters.</span>
+            </h1>
+
+
+            <p class="hero-description">
+                A safe and supportive online space where students
+                can connect with guidance counselors, express how
+                they feel, and receive the support they need.
+            </p>
+
+
+            <!-- Main buttons -->
+
+           <div class="hero-buttons">
+
+    <button
+        class="primary-button"
+        onclick="openChat()">
+
+        Let's Get Started
+        <span>→</span>
+
+    </button>
+
+</div>
+
+
+            <!-- Quick chat -->
+
+            <div class="quick-call">
+
+                <span class="call-icon">
+                    💬
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        Need someone to talk to?
+                    </strong>
+
+                    <p>
+                        Connect with your guidance counselor.
+                    </p>
+
+                </div>
+
+
+                <button onclick="openChat()">
+                    Chat with Ma'am Sarah
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             RIGHT SIDE MOOD CARD
+        ========================== -->
+
+        <section class="hero-visual">
+
+            <div class="visual-card">
+
+                <div class="card-top">
+
+                    <span class="online-dot"></span>
+
+                    Student Wellness
+
+                </div>
+
+
+                <div class="heart-icon">
+                    ♡
+                </div>
+
+
+                <h3>
+                    How are you<br>
+                    feeling today?
+                </h3>
+
+
+                <p>
+                    Your feelings matter.
+                    Take a moment to check in with yourself.
+                </p>
+
+
+                <!-- Mood buttons -->
+
+                <div class="mood-options">
+
+                    <button
+                        class="mood"
+                        data-mood="Happy">
+
+                        😊
+
+                    </button>
+
+
+                    <button
+                        class="mood"
+                        data-mood="Okay">
+
+                        🙂
+
+                    </button>
+
+
+                    <button
+                        class="mood"
+                        data-mood="Neutral">
+
+                        😐
+
+                    </button>
+
+
+                    <button
+                        class="mood"
+                        data-mood="Sad">
+
+                        😔
+
+                    </button>
+
+                </div>
+
+
+                <p
+                    id="moodMessage"
+                    class="mood-message">
+
+                    How are you feeling today?
+
+                </p>
+
+
+                <button
+                    class="check-button"
+                    onclick="moodCheck()">
+
+                    Check In
+
+                </button>
+
+            </div>
+
+        </section>
+
     </main>
 
-    <footer>
+
+
+    <!-- =========================
+         ABOUT
+    ========================== -->
+
+    <section id="about" class="info-section">
+
+        <div>
+
+            <span class="section-label">
+                ABOUT THE SYSTEM
+            </span>
+
+            <h2>
+                Support is just
+                <span>a step away.</span>
+            </h2>
+
+        </div>
+
+
         <p>
-            Developed by: Ruther Paul Pegarit | Jonald Dave Artajo | Oliver Lumasag
+            Reach & Teach is designed to make guidance counseling
+            more accessible and convenient for students through
+            an online platform. Students can connect with a
+            guidance counselor, check their mood, and request
+            counseling support.
         </p>
+
+    </section>
+
+
+
+    <!-- =========================
+         SERVICES
+    ========================== -->
+
+    <section id="services" class="services-section">
+
+        <span class="section-label">
+            OUR SERVICES
+        </span>
+
+
+        <h2>
+            How Reach & Teach can help
+        </h2>
+
+
+        <div class="service-grid">
+
+
+            <div class="service-card">
+
+                <div class="service-icon">
+                    💬
+                </div>
+
+                <h3>
+                    Online Guidance
+                </h3>
+
+                <p>
+                    Connect with a guidance counselor
+                    through an online platform.
+                </p>
+
+            </div>
+
+
+
+            <div class="service-card">
+
+                <div class="service-icon">
+                    📅
+                </div>
+
+                <h3>
+                    Reserve a Call
+                </h3>
+
+                <p>
+                    Request a convenient time for
+                    a guidance counseling session.
+                </p>
+
+            </div>
+
+
+
+            <div class="service-card">
+
+                <div class="service-icon">
+                    💙
+                </div>
+
+                <h3>
+                    Mood Monitoring
+                </h3>
+
+                <p>
+                    Check in with your feelings and
+                    monitor your mood over time.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================
+         CONTACT
+    ========================== -->
+
+    <section id="contact" class="contact-section">
+
+        <div>
+
+            <span class="section-label">
+                NEED SUPPORT?
+            </span>
+
+
+            <h2>
+                You don't have to
+                <span>handle everything alone.</span>
+            </h2>
+
+
+            <p>
+                Reach out to the guidance office when
+                you need someone to talk to.
+            </p>
+
+        </div>
+
+
+        <button
+            class="primary-button"
+            onclick="openChat()">
+
+            Chat with Ma'am Sarah
+            <span>→</span>
+
+        </button>
+
+    </section>
+
+
+
+    <!-- =========================
+         CHAT MODAL
+    ========================== -->
+
+    <div
+        id="chatModal"
+        class="chat-modal">
+
+
+        <div class="chat-window">
+
+
+            <!-- CHAT HEADER -->
+
+            <div class="chat-header">
+
+                <div class="counselor-info">
+
+                    <div class="counselor-avatar">
+                        SG
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+                            Ma'am Sarah Galabin
+                        </h3>
+
+                        <p>
+                            <span class="online-status"></span>
+                            Guidance Counselor
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="closeChat"
+                    class="close-chat">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+
+            <!-- CHAT BODY -->
+
+            <div
+                class="chat-body"
+                id="chatBody">
+
+
+                <div class="welcome-message">
+
+                    <div class="message-avatar">
+                        SG
+                    </div>
+
+
+                    <div class="message">
+
+                        <strong>
+                            Ma'am Sarah
+                        </strong>
+
+                        <p>
+                            Hello! 👋 Welcome to Reach & Teach.
+                            I'm here to listen and support you.
+                            How can I help you today?
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="quick-chat-options">
+
+                    <button onclick="sendQuickMessage('I would like to talk about how I feel.')">
+                        💙 I want to talk
+                    </button>
+
+                    <button onclick="sendQuickMessage('I would like to reserve a counseling call.')">
+                        📅 Reserve a Call
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- CHAT INPUT -->
+
+            <div class="chat-input">
+
+                <input
+                    type="text"
+                    id="chatInput"
+                    placeholder="Type your message...">
+
+                <button
+                    id="sendMessage">
+
+                    ➤
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer>
+
+        <div class="footer-brand">
+
+            <div class="brand-logo">
+                R&T
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Reach & Teach
+                </strong>
+
+                <p>
+                    Holy Trinity College
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="developers">
+
+            Developed by:
+            Ruther Paul Pegarit |
+            Jonald Dave Artajo |
+            Oliver Lumasag
+
+        </div>
+
+
+        <p class="copyright">
+
+            © 2026 Reach & Teach.
+            All Rights Reserved.
+
+        </p>
+
     </footer>
+
+
+
+    <!-- JAVASCRIPT -->
 
     <script src="js/script.js"></script>
 
 </body>
+
 </html>
