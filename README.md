@@ -14,4 +14,4 @@ REACH AND TEACH is a proposed online system designed to help students connect wi
 
 - Ruther Paul Pegarit
 - Jonald Dave Artajo
-- Oliver Lumasag 
+- Oliver Lumasag
