@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REACH AND TEACH — User Access System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-circle">RA</div>
+            <div class="logo-text">
+                <h3>REACH AND TEACH</h3>
+                <p>User Access Management</p>
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <span class="menu-label">MANAGEMENT</span>
+            <button class="nav-btn" data-target="dashboard" onclick="goTo('dashboard')">
+                <span class="icon">📊</span> Dashboard
+            </button>
+            <button class="nav-btn" data-target="form1" onclick="goTo('form1')">
+                <span class="icon">👤</span> Add User
+            </button>
+            <button class="nav-btn" data-target="form2" onclick="goTo('form2')">
+                <span class="icon">🔑</span> Role & Access
+            </button>
+            <button class="nav-btn active" data-target="login" onclick="goTo('login')">
+                <span class="icon">🔒</span> System Login
+            </button>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="goTo('login')">Logout</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title">
+                <h1 id="pageTitle">System Login</h1>
+                <p id="flowLabel">Step 1 of 3 — System Login</p>
+            </div>
+            <div class="user-profile">
+                <div class="profile-info">
+                    <strong>Administrator</strong>
+                    <span>System Admin</span>
+                </div>
+                <div class="avatar">A</div>
+            </div>
+        </header>
+
+        <div class="progress" id="progressContainer">
+            <div class="progress-step active" data-step="login">1. Login</div>
+            <div class="progress-step" data-step="form1">2. Add User</div>
+            <div class="progress-step" data-step="form2">3. Role & Access</div>
+        </div>
+
+        <section class="form-page active" id="login">
+            <div class="card login-card">
+                <div class="login-logo">
+                    <div class="circle">RA</div>
+                    <h2>REACH AND TEACH</h2>
+                    <p class="desc">User Access Portal</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginUser">Username / Email <span class="required">*</span></label>
+                        <input type="text" id="loginUser" placeholder="Enter username or email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword">Password <span class="required">*</span></label>
+                        <input type="password" id="loginPassword" placeholder="Enter password" required>
+                    </div>
+
+                    <label class="remember">
+                        <input type="checkbox" id="rememberMe"> Remember Me
+                    </label>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit">Login</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="form-page" id="form1">
+            <div class="card">
+                <h2>Add User</h2>
+                <p class="desc">Create a new account for a system user.</p>
+
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label for="username">Username <span class="required">*</span></label>
+                        <input type="text" id="username" name="username" placeholder="Enter username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">Department <span class="required">*</span></label>
+                        <select id="department" name="department" required>
+                            <option value="">Select department</option>
+                            <option>Guidance Office</option>
+                            <option>IT Department</option>
+                            <option>Student Affairs</option>
+                            <option>Administration</option>
+                            <option>Academic Department</option>
+                            <option>Registrar</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="initialPassword">Initial Password <span class="required">*</span></label>
+                        <input type="password" id="initialPassword" name="initialPassword" placeholder="Enter initial password" minlength="6" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status <span class="required">*</span></label>
+                        <select id="status" name="status" required>
+                            <option value="">Select status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit">Add User</button>
+                        <button type="reset" class="clear">Clear</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="form-page" id="form2">
+            <div class="card">
+                <h2>Role & Access Assignment</h2>
+                <p class="desc">Assign a role and specific access rights to the user.</p>
+
+                <form id="roleForm">
+                    <div class="form-group">
+                        <label for="userId">User <span class="required">*</span></label>
+                        <input type="text" id="userId" readonly placeholder="No user pending">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Role <span class="required">*</span></label>
+                        <select id="role" required>
+                            <option value="">Select role</option>
+                            <option>Administrator</option>
+                            <option>Guidance Counselor</option>
+                            <option>Staff</option>
+                            <option>Student Affairs Officer</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Access Rights <span class="required">*</span></label>
+                        <div class="permissions">
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Read">
+                                <span><strong>Read</strong><small>View records</small></span>
+                            </label>
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Write">
+                                <span><strong>Write</strong><small>Add and edit records</small></span>
+                            </label>
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Execute">
+                                <span><strong>Execute</strong><small>Run system functions</small></span>
+                            </label>
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Admin">
+                                <span><strong>Admin</strong><small>Manage users & access</small></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expirationDate">Expiration Date</label>
+                        <input type="date" id="expirationDate">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit">Save Access</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="form-page" id="dashboard">
+            <div class="dashboard-section-title">
+                <h2>User Access Management</h2>
+                <p>Manage user accounts, roles, permissions, and system login access.</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-title">Total Users</span>
+                    <strong class="stat-value" id="statTotalUsers">0</strong>
+                    <span class="stat-sub">Registered accounts</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Active Users</span>
+                    <strong class="stat-value" id="statActiveUsers">0</strong>
+                    <span class="stat-sub">Currently active</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Administrators</span>
+                    <strong class="stat-value" id="statAdmins">0</strong>
+                    <span class="stat-sub">Admin-level accounts</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Pending</span>
+                    <strong class="stat-value" id="statPending">0</strong>
+                    <span class="stat-sub">Pending access requests</span>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card table-card">
+                    <div class="card-header">
+                        <h3>Recent User Accounts</h3>
+                        <button class="submit small" id="addAnotherBtn">+ Add User</button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Username</th>
+                                    <th>Department</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card quick-actions-card">
+                    <h3>Quick Actions</h3>
+                    <div class="quick-actions-list">
+                        <button class="btn-action primary" onclick="goTo('form1')">Create New User</button>
+                        <button class="btn-action secondary" onclick="goTo('form2')">Assign Role & Access</button>
+                        <button class="btn-action secondary" onclick="goTo('login')">Open System Login</button>
+                    </div>
+                    <div class="info-box">
+                        <strong>Access control:</strong>
+                        <p>Assign only the permissions necessary for each user's assigned role.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
