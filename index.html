@@ -1,577 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Reach & Teach | Holy Trinity College</title>
-
-    <link rel="stylesheet" href="css/style.css">
+    <title>REACH AND TEACH — User Access System</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <!-- =========================
-         NAVIGATION
-    ========================== -->
-
-    <header class="navbar">
-
-        <div class="brand">
-
-            <div class="brand-logo">
-                R&T
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-circle">RA</div>
+            <div class="logo-text">
+                <h3>REACH AND TEACH</h3>
+                <p>User Access Management</p>
             </div>
-
-            <div class="brand-text">
-                <h2>Reach & Teach</h2>
-                <span>Holy Trinity College</span>
-            </div>
-
         </div>
 
-
-        <nav class="navigation">
-
-            <a href="#home" class="active">Home</a>
-            <a href="#about">About</a>
-            <a href="#services">Services</a>
-            <a href="#contact">Contact</a>
-
-        </nav>
-
-
-        <div class="nav-actions">
-
-            <button
-                class="theme-button"
-                id="themeToggle"
-                title="Toggle dark mode">
-                🌙
+        <div class="sidebar-menu">
+            <span class="menu-label">MANAGEMENT</span>
+            <button class="nav-btn" data-target="dashboard" onclick="goTo('dashboard')">
+                <span class="icon">📊</span> Dashboard
             </button>
-
-            <button
-                class="nav-call"
-                onclick="openChat()">
-                Reserve a Call
+            <button class="nav-btn" data-target="form1" onclick="goTo('form1')">
+                <span class="icon">👤</span> Add User
             </button>
-
+            <button class="nav-btn" data-target="form2" onclick="goTo('form2')">
+                <span class="icon">🔑</span> Role & Access
+            </button>
+            <button class="nav-btn active" data-target="login" onclick="goTo('login')">
+                <span class="icon">🔒</span> System Login
+            </button>
         </div>
 
-    </header>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="goTo('login')">Logout</button>
+        </div>
+    </aside>
 
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title">
+                <h1 id="pageTitle">System Login</h1>
+                <p id="flowLabel">Step 1 of 3 — System Login</p>
+            </div>
+            <div class="user-profile">
+                <div class="profile-info">
+                    <strong>Administrator</strong>
+                    <span>System Admin</span>
+                </div>
+                <div class="avatar">A</div>
+            </div>
+        </header>
 
+        <div class="progress" id="progressContainer">
+            <div class="progress-step active" data-step="login">1. Login</div>
+            <div class="progress-step" data-step="form1">2. Add User</div>
+            <div class="progress-step" data-step="form2">3. Role & Access</div>
+        </div>
 
-    <!-- =========================
-         HERO SECTION
-    ========================== -->
+        <section class="form-page active" id="login">
+            <div class="card login-card">
+                <div class="login-logo">
+                    <div class="circle">RA</div>
+                    <h2>REACH AND TEACH</h2>
+                    <p class="desc">User Access Portal</p>
+                </div>
 
-    <main id="home" class="hero">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginUser">Username / Email <span class="required">*</span></label>
+                        <input type="text" id="loginUser" placeholder="Enter username or email" required>
+                    </div>
 
-        <!-- Background shapes -->
-        <div class="shape shape-one"></div>
-        <div class="shape shape-two"></div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password <span class="required">*</span></label>
+                        <input type="password" id="loginPassword" placeholder="Enter password" required>
+                    </div>
 
+                    <label class="remember">
+                        <input type="checkbox" id="rememberMe"> Remember Me
+                    </label>
 
-        <!-- LEFT SIDE -->
+                    <div class="form-actions">
+                        <button type="submit" class="submit">Login</button>
+                    </div>
+                </form>
+            </div>
+        </section>
 
-        <section class="hero-content">
+        <section class="form-page" id="form1">
+            <div class="card">
+                <h2>Add User</h2>
+                <p class="desc">Create a new account for a system user.</p>
 
-            <div class="badge">
-                ✦ Student Guidance & Wellness
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label for="username">Username <span class="required">*</span></label>
+                        <input type="text" id="username" name="username" placeholder="Enter username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">Department <span class="required">*</span></label>
+                        <select id="department" name="department" required>
+                            <option value="">Select department</option>
+                            <option>Guidance Office</option>
+                            <option>IT Department</option>
+                            <option>Student Affairs</option>
+                            <option>Administration</option>
+                            <option>Academic Department</option>
+                            <option>Registrar</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="initialPassword">Initial Password <span class="required">*</span></label>
+                        <input type="password" id="initialPassword" name="initialPassword" placeholder="Enter initial password" minlength="6" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status <span class="required">*</span></label>
+                        <select id="status" name="status" required>
+                            <option value="">Select status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit">Add User</button>
+                        <button type="reset" class="clear">Clear</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="form-page" id="form2">
+            <div class="card">
+                <h2>Role & Access Assignment</h2>
+                <p class="desc">Assign a role and specific access rights to the user.</p>
+
+                <form id="roleForm">
+                    <div class="form-group">
+                        <label for="userId">User <span class="required">*</span></label>
+                        <input type="text" id="userId" readonly placeholder="No user pending">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Role <span class="required">*</span></label>
+                        <select id="role" required>
+                            <option value="">Select role</option>
+                            <option>Administrator</option>
+                            <option>Guidance Counselor</option>
+                            <option>Staff</option>
+                            <option>Student Affairs Officer</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Access Rights <span class="required">*</span></label>
+                        <div class="permissions">
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Read">
+                                <span><strong>Read</strong><small>View records</small></span>
+                            </label>
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Write">
+                                <span><strong>Write</strong><small>Add and edit records</small></span>
+                            </label>
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Execute">
+                                <span><strong>Execute</strong><small>Run system functions</small></span>
+                            </label>
+                            <label class="permission">
+                                <input type="checkbox" name="access" value="Admin">
+                                <span><strong>Admin</strong><small>Manage users & access</small></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expirationDate">Expiration Date</label>
+                        <input type="date" id="expirationDate">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit">Save Access</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="form-page" id="dashboard">
+            <div class="dashboard-section-title">
+                <h2>User Access Management</h2>
+                <p>Manage user accounts, roles, permissions, and system login access.</p>
             </div>
 
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-title">Total Users</span>
+                    <strong class="stat-value" id="statTotalUsers">0</strong>
+                    <span class="stat-sub">Registered accounts</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Active Users</span>
+                    <strong class="stat-value" id="statActiveUsers">0</strong>
+                    <span class="stat-sub">Currently active</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Administrators</span>
+                    <strong class="stat-value" id="statAdmins">0</strong>
+                    <span class="stat-sub">Admin-level accounts</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Pending</span>
+                    <strong class="stat-value" id="statPending">0</strong>
+                    <span class="stat-sub">Pending access requests</span>
+                </div>
+            </div>
 
-            <h1>
-                Your Well-being
-                <span>Matters.</span>
-            </h1>
+            <div class="dashboard-grid">
+                <div class="card table-card">
+                    <div class="card-header">
+                        <h3>Recent User Accounts</h3>
+                        <button class="submit small" id="addAnotherBtn">+ Add User</button>
+                    </div>
 
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Username</th>
+                                    <th>Department</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTable"></tbody>
+                        </table>
+                    </div>
+                </div>
 
-            <p class="hero-description">
-                A safe and supportive online space where students
-                can connect with guidance counselors, express how
-                they feel, and receive the support they need.
-            </p>
-
-
-            <!-- Main buttons -->
-
-           <div class="hero-buttons">
-
-    <button
-        class="primary-button"
-        onclick="openChat()">
-
-        Let's Get Started
-        <span>→</span>
-
-    </button>
-
+                <div class="card quick-actions-card">
+                    <h3>Quick Actions</h3>
+                    <div class="quick-actions-list">
+                        <button class="btn-action primary" onclick="goTo('form1')">Create New User</button>
+                        <button class="btn-action secondary" onclick="goTo('form2')">Assign Role & Access</button>
+                        <button class="btn-action secondary" onclick="goTo('login')">Open System Login</button>
+                    </div>
+                    <div class="info-box">
+                        <strong>Access control:</strong>
+                        <p>Assign only the permissions necessary for each user's assigned role.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 </div>
 
-
-            <!-- Quick chat -->
-
-            <div class="quick-call">
-
-                <span class="call-icon">
-                    💬
-                </span>
-
-
-                <div>
-
-                    <strong>
-                        Need someone to talk to?
-                    </strong>
-
-                    <p>
-                        Connect with your guidance counselor.
-                    </p>
-
-                </div>
-
-
-                <button onclick="openChat()">
-                    Chat with Ma'am Sarah
-                </button>
-
-            </div>
-
-        </section>
-
-
-
-        <!-- =========================
-             RIGHT SIDE MOOD CARD
-        ========================== -->
-
-        <section class="hero-visual">
-
-            <div class="visual-card">
-
-                <div class="card-top">
-
-                    <span class="online-dot"></span>
-
-                    Student Wellness
-
-                </div>
-
-
-                <div class="heart-icon">
-                    ♡
-                </div>
-
-
-                <h3>
-                    How are you<br>
-                    feeling today?
-                </h3>
-
-
-                <p>
-                    Your feelings matter.
-                    Take a moment to check in with yourself.
-                </p>
-
-
-                <!-- Mood buttons -->
-
-                <div class="mood-options">
-
-                    <button
-                        class="mood"
-                        data-mood="Happy">
-
-                        😊
-
-                    </button>
-
-
-                    <button
-                        class="mood"
-                        data-mood="Okay">
-
-                        🙂
-
-                    </button>
-
-
-                    <button
-                        class="mood"
-                        data-mood="Neutral">
-
-                        😐
-
-                    </button>
-
-
-                    <button
-                        class="mood"
-                        data-mood="Sad">
-
-                        😔
-
-                    </button>
-
-                </div>
-
-
-                <p
-                    id="moodMessage"
-                    class="mood-message">
-
-                    How are you feeling today?
-
-                </p>
-
-
-                <button
-                    class="check-button"
-                    onclick="moodCheck()">
-
-                    Check In
-
-                </button>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-
-    <!-- =========================
-         ABOUT
-    ========================== -->
-
-    <section id="about" class="info-section">
-
-        <div>
-
-            <span class="section-label">
-                ABOUT THE SYSTEM
-            </span>
-
-            <h2>
-                Support is just
-                <span>a step away.</span>
-            </h2>
-
-        </div>
-
-
-        <p>
-            Reach & Teach is designed to make guidance counseling
-            more accessible and convenient for students through
-            an online platform. Students can connect with a
-            guidance counselor, check their mood, and request
-            counseling support.
-        </p>
-
-    </section>
-
-
-
-    <!-- =========================
-         SERVICES
-    ========================== -->
-
-    <section id="services" class="services-section">
-
-        <span class="section-label">
-            OUR SERVICES
-        </span>
-
-
-        <h2>
-            How Reach & Teach can help
-        </h2>
-
-
-        <div class="service-grid">
-
-
-            <div class="service-card">
-
-                <div class="service-icon">
-                    💬
-                </div>
-
-                <h3>
-                    Online Guidance
-                </h3>
-
-                <p>
-                    Connect with a guidance counselor
-                    through an online platform.
-                </p>
-
-            </div>
-
-
-
-            <div class="service-card">
-
-                <div class="service-icon">
-                    📅
-                </div>
-
-                <h3>
-                    Reserve a Call
-                </h3>
-
-                <p>
-                    Request a convenient time for
-                    a guidance counseling session.
-                </p>
-
-            </div>
-
-
-
-            <div class="service-card">
-
-                <div class="service-icon">
-                    💙
-                </div>
-
-                <h3>
-                    Mood Monitoring
-                </h3>
-
-                <p>
-                    Check in with your feelings and
-                    monitor your mood over time.
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================
-         CONTACT
-    ========================== -->
-
-    <section id="contact" class="contact-section">
-
-        <div>
-
-            <span class="section-label">
-                NEED SUPPORT?
-            </span>
-
-
-            <h2>
-                You don't have to
-                <span>handle everything alone.</span>
-            </h2>
-
-
-            <p>
-                Reach out to the guidance office when
-                you need someone to talk to.
-            </p>
-
-        </div>
-
-
-        <button
-            class="primary-button"
-            onclick="openChat()">
-
-            Chat with Ma'am Sarah
-            <span>→</span>
-
-        </button>
-
-    </section>
-
-
-
-    <!-- =========================
-         CHAT MODAL
-    ========================== -->
-
-    <div
-        id="chatModal"
-        class="chat-modal">
-
-
-        <div class="chat-window">
-
-
-            <!-- CHAT HEADER -->
-
-            <div class="chat-header">
-
-                <div class="counselor-info">
-
-                    <div class="counselor-avatar">
-                        SG
-                    </div>
-
-
-                    <div>
-
-                        <h3>
-                            Ma'am Sarah Galabin
-                        </h3>
-
-                        <p>
-                            <span class="online-status"></span>
-                            Guidance Counselor
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    id="closeChat"
-                    class="close-chat">
-
-                    ×
-
-                </button>
-
-            </div>
-
-
-
-            <!-- CHAT BODY -->
-
-            <div
-                class="chat-body"
-                id="chatBody">
-
-
-                <div class="welcome-message">
-
-                    <div class="message-avatar">
-                        SG
-                    </div>
-
-
-                    <div class="message">
-
-                        <strong>
-                            Ma'am Sarah
-                        </strong>
-
-                        <p>
-                            Hello! 👋 Welcome to Reach & Teach.
-                            I'm here to listen and support you.
-                            How can I help you today?
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="quick-chat-options">
-
-                    <button onclick="sendQuickMessage('I would like to talk about how I feel.')">
-                        💙 I want to talk
-                    </button>
-
-                    <button onclick="sendQuickMessage('I would like to reserve a counseling call.')">
-                        📅 Reserve a Call
-                    </button>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- CHAT INPUT -->
-
-            <div class="chat-input">
-
-                <input
-                    type="text"
-                    id="chatInput"
-                    placeholder="Type your message...">
-
-                <button
-                    id="sendMessage">
-
-                    ➤
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =========================
-         FOOTER
-    ========================== -->
-
-    <footer>
-
-        <div class="footer-brand">
-
-            <div class="brand-logo">
-                R&T
-            </div>
-
-
-            <div>
-
-                <strong>
-                    Reach & Teach
-                </strong>
-
-                <p>
-                    Holy Trinity College
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="developers">
-
-            Developed by:
-            Ruther Paul Pegarit |
-            Jonald Dave Artajo |
-            Oliver Lumasag
-
-        </div>
-
-
-        <p class="copyright">
-
-            © 2026 Reach & Teach.
-            All Rights Reserved.
-
-        </p>
-
-    </footer>
-
-
-
-    <!-- JAVASCRIPT -->
-
-    <script src="js/script.js"></script>
-
+<script src="script.js"></script>
 </body>
-
 </html>
