@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        REACH & TEACH — Admin Login
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/admin.css"
+    >
+
+</head>
+
+
+<body class="login-body">
+
+
+<main class="login-page">
+
+
+    <div class="login-card">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                RT
+            </div>
+
+            <h1>
+                REACH & TEACH
+            </h1>
+
+            <p>
+                Administration Portal
+            </p>
+
+        </div>
+
+
+        <!-- LOGIN FORM -->
+
+        <form id="loginForm">
+
+
+            <!-- EMAIL -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter admin email"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+
+            <!-- PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter admin password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+
+                    <button
+                        type="button"
+                        id="passwordToggle"
+                        class="password-toggle"
+                        aria-label="Show password"
+                    >
+
+                        👁
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- MESSAGE -->
+
+            <div
+                id="loginMessage"
+                class="login-message"
+            ></div>
+
+
+            <!-- LOGIN BUTTON -->
+
+            <button
+                type="submit"
+                id="loginButton"
+                class="login-button"
+            >
+
+                LOGIN
+
+            </button>
+
+
+        </form>
+
+
+        <!-- FOOTER -->
+
+        <div class="login-footer">
+
+            <span>
+                REACH & TEACH
+            </span>
+
+            <span>
+                Admin Portal
+            </span>
+
+        </div>
+
+
+    </div>
+
+
+</main>
+
+
+<script src="./js/login.js"></script>
+
+</body>
+
+</html>
