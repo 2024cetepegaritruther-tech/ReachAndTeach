@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Reach & Teach | Holy Trinity College</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css">
+
+
+    <style>
+        /* Hard gate: never show the student home while logged out. */
+        body.auth-locked #appContent {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        /* After authentication, hide the login/welcome shell completely. */
+        body:not(.auth-locked) #authShell {
+            display: none !important;
+        }
+    </style>
+
+</head>
+
+
+<body class="auth-locked">
+
+    <!-- =====================================================
+         USER ACCESS SCREENS
+         UI ONLY: authentication is intentionally not simulated.
+    ====================================================== -->
+
+    <div id="authShell" class="auth-shell">
+
+        <section id="welcomeScreen" class="auth-screen is-active" aria-labelledby="welcomeTitle">
+
+            <div class="auth-frame welcome-frame">
+
+                <div class="auth-brand-lockup">
+                    <span class="auth-brand-mark" aria-hidden="true">♡</span>
+                    <span>HOLY TRINITY COLLEGE</span>
+                </div>
+
+                <div class="welcome-card auth-card">
+
+                    <span class="auth-eyebrow">STUDENT GUIDANCE &amp; WELLNESS</span>
+                    <h1 id="welcomeTitle">Reach <span>&amp;</span> Teach</h1>
+                    <p class="welcome-subtitle">A supportive space for student wellbeing.</p>
+
+                    <div class="welcome-buttons">
+                        <button type="button" class="auth-primary-btn" id="goLoginBtn">Log in</button>
+                        <button type="button" class="auth-secondary-btn" id="goSignupBtn">Sign up</button>
+                    </div>
+
+                    <p class="auth-preview-note" role="status">
+                        Preview only: sign-in and account creation are not connected to an authentication service.
+                        No password is saved or submitted.
+                    </p>
+
+                </div>
+
+                <p class="auth-footer">Reach &amp; Teach · Holy Trinity College</p>
+
+            </div>
+
+        </section>
+
+
+        <section id="loginScreen" class="auth-screen" aria-labelledby="loginTitle" hidden>
+
+            <div class="auth-frame login-frame">
+
+                <article class="auth-card login-card">
+
+                    <div class="auth-card-topbar" aria-hidden="true"><span></span><span></span><span></span></div>
+
+                    <button type="button" class="auth-back-link" id="backToWelcomeBtn">← Back</button>
+
+                    <div class="login-symbol" aria-hidden="true">
+                        <span class="login-symbol-head"></span>
+                        <span class="login-symbol-body"></span>
+                    </div>
+
+                    <span class="auth-eyebrow">REACH &amp; TEACH</span>
+                    <h1 id="loginTitle">Welcome back</h1>
+                    <p class="auth-card-description">Log in to continue to student guidance and wellness.</p>
+
+                    <form id="loginForm" novalidate>
+
+                        <div class="auth-field">
+                            <label for="loginEmail">Email address</label>
+                            <input type="email" id="loginEmail" name="email" placeholder="name@example.com" autocomplete="email" required>
+                            <small class="auth-field-error" id="loginEmailError" aria-live="polite"></small>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="loginPassword">Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                                <button type="button" id="loginPasswordToggle" class="password-toggle" aria-label="Show password" aria-pressed="false">👁</button>
+                            </div>
+                            <small class="auth-field-error" id="loginPasswordError" aria-live="polite"></small>
+                        </div>
+
+                        <div class="auth-form-tools">
+                            <span>Use your school account credentials.</span>
+                            <button type="button" id="forgotPasswordBtn" class="auth-text-button">Forgot password?</button>
+                        </div>
+
+                        <div id="loginMessage" class="auth-form-message" role="status" aria-live="polite"></div>
+
+                        <button type="submit" class="auth-primary-btn auth-submit-btn">Continue</button>
+
+                    </form>
+
+                    <div class="auth-divider"><span>or continue with</span></div>
+
+                    <button type="button" id="googleLoginBtn" class="google-login-btn">
+                        <span class="google-icon" aria-hidden="true">G</span>
+                        <span>Continue with Google</span>
+                    </button>
+
+                    <p class="auth-switch-copy">New to Reach &amp; Teach? <button type="button" class="auth-text-button" id="goSignupFromLogin">Create an account</button></p>
+
+                    <p class="auth-preview-note compact-note"></p>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <section id="signupScreen" class="auth-screen" aria-labelledby="signupTitle" hidden>
+
+            <div class="auth-frame signup-frame">
+
+                <div class="signup-heading-row">
+                    <div>
+                        <span class="auth-eyebrow">REACH &amp; TEACH · HOLY TRINITY COLLEGE</span>
+                        <h1 id="signupTitle">Create your account</h1>
+                        <p class="auth-card-description">Enter your information to request a student account.</p>
+                    </div>
+                    <button type="button" class="auth-back-link" id="signupBackBtn">← Back</button>
+                </div>
+
+                <article class="auth-card signup-card">
+
+                    <form id="signupForm" novalidate>
+
+                        <h2 class="auth-section-title">Personal information</h2>
+
+                        <div class="auth-form-grid">
+                            <div class="auth-field">
+                                <label for="userId">User ID</label>
+                                <input type="text" id="userId" name="userId" placeholder="Assigned by the account service" readonly>
+                                <small class="auth-field-hint">Assigned by the school after account setup.</small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="birthday">Birthday <span aria-hidden="true">*</span></label>
+                                <input type="date" id="birthday" name="birthday" autocomplete="bday" required>
+                                <small class="auth-field-error" id="birthdayError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="lastName">Last name <span aria-hidden="true">*</span></label>
+                                <input type="text" id="lastName" name="lastName" placeholder="Enter last name" autocomplete="family-name" required>
+                                <small class="auth-field-error" id="lastNameError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="firstName">First name <span aria-hidden="true">*</span></label>
+                                <input type="text" id="firstName" name="firstName" placeholder="Enter first name" autocomplete="given-name" required>
+                                <small class="auth-field-error" id="firstNameError" aria-live="polite"></small>
+                            </div>
+                        </div>
+
+                        <h2 class="auth-section-title">Account information</h2>
+
+                        <div class="auth-form-grid">
+                            <div class="auth-field">
+                                <label for="username">Username <span aria-hidden="true">*</span></label>
+                                <input type="text" id="username" name="username" placeholder="Choose a username" autocomplete="username" minlength="3" required>
+                                <small class="auth-field-error" id="usernameError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="email">Email <span aria-hidden="true">*</span></label>
+                                <input type="email" id="email" name="email" placeholder="Enter school email" autocomplete="email" required>
+                                <small class="auth-field-error" id="emailError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="password">Password <span aria-hidden="true">*</span></label>
+                                <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required>
+                                <small class="auth-field-error" id="passwordError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="confirmPassword">Confirm password <span aria-hidden="true">*</span></label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter password" autocomplete="new-password" minlength="8" required>
+                                <small class="auth-field-error" id="confirmPasswordError" aria-live="polite"></small>
+                            </div>
+                        </div>
+
+                        <h2 class="auth-section-title">Address</h2>
+
+                        <div class="auth-form-grid">
+                            <div class="auth-field">
+                                <label for="country">Country <span aria-hidden="true">*</span></label>
+                                <select id="country" name="country" required>
+                                    <option value="">Select country</option>
+                                    <option value="Philippines">Philippines</option>
+                                </select>
+                                <small class="auth-field-error" id="countryError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="province">Province <span aria-hidden="true">*</span></label>
+                                <input type="text" id="province" name="province" placeholder="Enter province" autocomplete="address-level1" required>
+                                <small class="auth-field-error" id="provinceError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="city">City / municipality <span aria-hidden="true">*</span></label>
+                                <input type="text" id="city" name="city" placeholder="Enter city or municipality" autocomplete="address-level2" required>
+                                <small class="auth-field-error" id="cityError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="barangay">Barangay <span aria-hidden="true">*</span></label>
+                                <input type="text" id="barangay" name="barangay" placeholder="Enter barangay" required>
+                                <small class="auth-field-error" id="barangayError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="street">Street <span aria-hidden="true">*</span></label>
+                                <input type="text" id="street" name="street" placeholder="Enter street" autocomplete="address-line1" required>
+                                <small class="auth-field-error" id="streetError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="houseNumber">House number <span aria-hidden="true">*</span></label>
+                                <input type="text" id="houseNumber" name="houseNumber" placeholder="Enter house number" required>
+                                <small class="auth-field-error" id="houseNumberError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="postalCode">Postal code <span aria-hidden="true">*</span></label>
+                                <input type="text" id="postalCode" name="postalCode" placeholder="4 digits" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="postal-code" required>
+                                <small class="auth-field-error" id="postalCodeError" aria-live="polite"></small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="department">Account type</label>
+                                <input type="text" id="department" name="department" value="Student" readonly>
+                                <small class="auth-field-hint">Student self-registration only. Staff accounts must be created by an administrator.</small>
+                            </div>
+                            <div class="auth-field">
+                                <label for="status">Account status</label>
+                                <input type="text" id="status" name="status" value="Pending" readonly>
+                                <small class="auth-field-hint">The school assigns account status after review.</small>
+                            </div>
+                        </div>
+
+                        <div id="signupMessage" class="auth-form-message" role="status" aria-live="polite"></div>
+
+                        <div class="auth-button-group">
+                            <button type="submit" class="auth-primary-btn">Create account</button>
+                            <button type="button" class="auth-secondary-btn" id="signupBackToLoginBtn">Back to log in</button>
+                            <button type="reset" class="auth-plain-btn">Clear form</button>
+                        </div>
+
+                        <p class="auth-preview-note signup-note"></p>
+
+                    </form>
+
+                </article>
+
+            </div>
+
+        </section>
+
+    </div>
+
+    <div id="appContent" class="app-content-locked" hidden inert aria-hidden="true">
+
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
+
+    <header class="navbar">
+
+        <div class="brand">
+
+            <div class="brand-logos">
+
+                <img
+                    src="images/htc-logo.png"
+                    alt="Holy Trinity College Logo"
+                    class="school-logo">
+
+                <img
+                    src="images/wildcats-logo.png"
+                    alt="Holy Trinity College Wildcats Logo"
+                    class="school-logo wildcats-logo">
+
+            </div>
+
+
+            <div class="brand-text">
+
+                <h2>Reach & Teach</h2>
+
+                <span>Holy Trinity College</span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="navigation">
+
+            <a
+                href="#home"
+                class="active">
+                Home
+            </a>
+
+            <a href="#about">
+                About
+            </a>
+
+            <a href="#services">
+                Services
+            </a>
+
+            <a href="#contact">
+                Contact
+            </a>
+
+        </nav>
+
+
+        <div class="nav-actions">
+
+            <button
+                type="button"
+                class="theme-button"
+                id="themeToggle"
+                title="Toggle dark mode"
+                aria-label="Toggle dark mode">
+
+                🌙
+
+            </button>
+
+
+            <button
+                type="button"
+                class="nav-call"
+                onclick="openReservation()">
+
+                Reserve a Call
+
+            </button>
+
+
+            <button
+                type="button"
+                class="nav-call"
+                id="logoutButton">
+
+                Log out
+
+            </button>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="mobile-menu-button"
+            id="mobileMenuButton"
+            aria-label="Open navigation">
+
+            ☰
+
+        </button>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <main
+        id="home"
+        class="hero">
+
+        <div class="hero-background-shape shape-one"></div>
+
+        <div class="hero-background-shape shape-two"></div>
+
+
+        <section class="hero-content">
+
+            <div class="badge">
+
+                <span>✦</span>
+
+                Student Guidance & Wellness
+
+            </div>
+
+
+            <h1>
+
+                Your Well-being
+
+                <span>
+                    Matters.
+                </span>
+
+            </h1>
+
+
+            <p class="hero-description">
+
+                A safe and supportive online space where students
+                can connect with guidance counselors, express how
+                they feel, and receive the support they need.
+
+            </p>
+
+
+            <div class="hero-buttons">
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    onclick="openChat()">
+
+                    Let's Get Started
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <div class="quick-call">
+
+                <div class="call-icon">
+                    💬
+                </div>
+
+
+                <div class="quick-call-text">
+
+                    <strong>
+                        Need someone to talk to?
+                    </strong>
+
+                    <p>
+                        Connect with your guidance counselor.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="quick-call-button"
+                    onclick="openChat()">
+
+                    Chat with Ma'am Sarah
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             MOOD CARD
+        ================================================== -->
+
+        <section class="hero-visual">
+
+            <div class="visual-card">
+
+                <div class="card-top">
+
+                    <span class="online-dot"></span>
+
+                    Student Wellness
+
+                </div>
+
+
+                <div class="heart-icon">
+                    ♡
+                </div>
+
+
+                <h3>
+
+                    How are you
+                    <br>
+                    feeling today?
+
+                </h3>
+
+
+                <p class="mood-description">
+
+                    Your feelings matter.
+                    Take a moment to check in with yourself.
+
+                </p>
+
+
+                <div class="mood-options">
+
+                    <button
+                        type="button"
+                        class="mood"
+                        data-mood="Happy"
+                        aria-label="Happy">
+
+                        😊
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="mood"
+                        data-mood="Okay"
+                        aria-label="Okay">
+
+                        🙂
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="mood"
+                        data-mood="Neutral"
+                        aria-label="Neutral">
+
+                        😐
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="mood"
+                        data-mood="Sad"
+                        aria-label="Sad">
+
+                        😔
+
+                    </button>
+
+                </div>
+
+
+                <p
+                    id="moodMessage"
+                    class="mood-message">
+
+                    How are you feeling today?
+
+                </p>
+
+
+                <button
+                    type="button"
+                    class="check-button"
+                    onclick="moodCheck()">
+
+                    Check In
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         ABOUT
+    ====================================================== -->
+
+    <section
+        id="about"
+        class="info-section">
+
+        <div class="section-heading">
+
+            <span class="section-label">
+                ABOUT THE SYSTEM
+            </span>
+
+
+            <h2>
+
+                Support is just
+
+                <span>
+                    a step away.
+                </span>
+
+            </h2>
+
+        </div>
+
+
+        <div class="section-description">
+
+            <p>
+
+                Reach & Teach is designed to make guidance
+                counseling more accessible and convenient
+                for students through an online platform.
+
+            </p>
+
+
+            <p>
+
+                Students can connect with a guidance counselor,
+                check their mood, and request counseling support
+                in one convenient place.
+
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         SERVICES
+    ====================================================== -->
+
+    <section
+        id="services"
+        class="services-section">
+
+        <div class="section-center-heading">
+
+            <span class="section-label">
+                OUR SERVICES
+            </span>
+
+
+            <h2>
+                How Reach & Teach can help
+            </h2>
+
+
+            <p>
+                Tools designed to make student guidance
+                easier and more accessible.
+            </p>
+
+        </div>
+
+
+        <div class="service-grid">
+
+
+            <!-- SERVICE 1 -->
+
+            <div
+                class="service-card"
+                onclick="openChat()">
+
+                <div class="service-icon">
+                    💬
+                </div>
+
+
+                <div class="service-number">
+                    01
+                </div>
+
+
+                <h3>
+                    Online Guidance
+                </h3>
+
+
+                <p>
+
+                    Connect with a guidance counselor
+                    through an online platform.
+
+                </p>
+
+
+                <button
+                    type="button"
+                    class="service-link">
+
+                    Start a Conversation
+                    →
+                    
+                </button>
+
+            </div>
+
+
+
+            <!-- SERVICE 2 -->
+
+            <div
+                class="service-card"
+                onclick="openReservation()">
+
+                <div class="service-icon">
+                    📅
+                </div>
+
+
+                <div class="service-number">
+                    02
+                </div>
+
+
+                <h3>
+                    Reserve a Call
+                </h3>
+
+
+                <p>
+
+                    Request a convenient time for
+                    a guidance counseling session.
+
+                </p>
+
+
+                <button
+                    type="button"
+                    class="service-link">
+
+                    Schedule a Call
+                    →
+
+                </button>
+
+            </div>
+
+
+
+            <!-- SERVICE 3 -->
+
+            <div
+                class="service-card"
+                onclick="scrollToMood()">
+
+                <div class="service-icon">
+                    💙
+                </div>
+
+
+                <div class="service-number">
+                    03
+                </div>
+
+
+                <h3>
+                    Mood Monitoring
+                </h3>
+
+
+                <p>
+
+                    Check in with your feelings and
+                    monitor your mood over time.
+
+                </p>
+
+
+                <button
+                    type="button"
+                    class="service-link">
+
+                    Check Your Mood
+                    →
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         RECORDS MODAL
+    ====================================================== -->
+
+    <div
+        id="recordsModal"
+        class="modal-overlay records-modal"
+        aria-hidden="true">
+
+        <div class="records-window">
+
+
+            <div class="records-header">
+
+                <div>
+
+                    <span class="section-label">
+                        STUDENT INFORMATION
+                    </span>
+
+
+                    <h2>
+                        Student Records
+                    </h2>
+
+
+                    <p>
+                        Reach & Teach System Records
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="close-button"
+                    onclick="closeRecords()"
+                    aria-label="Close records">
+
+                    ×
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CONTACT
+    ====================================================== -->
+
+    <section
+        id="contact"
+        class="contact-section">
+
+        <div>
+
+            <span class="section-label">
+                NEED SUPPORT?
+            </span>
+
+
+            <h2>
+
+                You don't have to
+
+                <span>
+                    handle everything alone.
+                </span>
+
+            </h2>
+
+
+            <p>
+
+                Reach out to the guidance office when
+                you need someone to talk to.
+
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-button"
+            onclick="openChat()">
+
+            Chat with Ma'am Sarah
+
+            <span>
+                →
+            </span>
+
+        </button>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         CHAT MODAL
+    ====================================================== -->
+
+    <div
+        id="chatModal"
+        class="modal-overlay chat-modal"
+        aria-hidden="true">
+
+        <div class="chat-window">
+
+
+            <div class="chat-header">
+
+                <div class="counselor-info">
+
+                    <div class="counselor-avatar">
+                        SG
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+                            Ma'am Sarah Galabin
+                        </h3>
+
+
+                        <p>
+
+                            <span class="online-status"></span>
+
+                            Guidance Counselor
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="closeChat"
+                    class="close-button"
+                    aria-label="Close chat">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+            <div
+                class="chat-body"
+                id="chatBody">
+
+                <div class="welcome-message">
+
+                    <div class="message-avatar">
+                        SG
+                    </div>
+
+
+                    <div class="message">
+
+                        <strong>
+                            Ma'am Sarah
+                        </strong>
+
+
+                        <p>
+
+                            Hello! 👋 Welcome to Reach & Teach.
+                            I'm here to listen and support you.
+                            How can I help you today?
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="quick-chat-options">
+
+                    <button
+                        type="button"
+                        onclick="sendQuickMessage('I would like to talk about how I feel.')">
+
+                        💙 I want to talk
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="openReservation()">
+
+                        📅 Reserve a Call
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="chat-input">
+
+                <input
+                    type="text"
+                    id="chatInput"
+                    placeholder="Type your message..."
+                    autocomplete="off">
+
+
+                <button
+                    type="button"
+                    id="sendMessage"
+                    aria-label="Send message">
+
+                    ➤
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESERVATION MODAL
+    ====================================================== -->
+
+    <div
+        id="reservationModal"
+        class="modal-overlay reservation-modal"
+        aria-hidden="true">
+
+        <div class="reservation-window">
+
+
+            <div class="reservation-header">
+
+                <div>
+
+                    <span class="section-label">
+                        COUNSELING APPOINTMENT
+                    </span>
+
+
+                    <h2>
+                        Reserve a Call
+                    </h2>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="close-button"
+                    onclick="closeReservation()"
+                    aria-label="Close reservation">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+            <div class="reservation-content">
+
+                <div class="reservation-intro">
+
+                    <div class="reservation-icon">
+                        📅
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Schedule a counseling session
+                        </strong>
+
+                        <p>
+                            Choose your preferred date and time.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <label for="reservationDate">
+                    Select Date
+                </label>
+
+
+                <input
+                    type="date"
+                    id="reservationDate">
+
+
+                <label for="reservationTime">
+                    Select Time
+                </label>
+
+
+                <select id="reservationTime">
+
+                    <option value="">
+                        Choose a time
+                    </option>
+
+                    <option value="8:00 AM">
+                        8:00 AM
+                    </option>
+
+                    <option value="9:00 AM">
+                        9:00 AM
+                    </option>
+
+                    <option value="10:00 AM">
+                        10:00 AM
+                    </option>
+
+                    <option value="11:00 AM">
+                        11:00 AM
+                    </option>
+
+                    <option value="1:00 PM">
+                        1:00 PM
+                    </option>
+
+                    <option value="2:00 PM">
+                        2:00 PM
+                    </option>
+
+                    <option value="3:00 PM">
+                        3:00 PM
+                    </option>
+
+                    <option value="4:00 PM">
+                        4:00 PM
+                    </option>
+
+                </select>
+
+
+                <div class="selected-appointment">
+
+                    <div class="appointment-icon">
+                        📅
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Your Appointment
+                        </strong>
+
+
+                        <p id="appointmentPreview">
+                            Please select a date and time.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="confirm-reservation"
+                    onclick="confirmReservation()">
+
+                    Confirm Reservation
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         TOAST
+    ====================================================== -->
+
+    <div
+        id="toastContainer"
+        class="toast-container"
+        aria-live="polite">
+    </div>
+
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer>
+
+        <div class="footer-brand">
+
+            <div class="footer-school-logos">
+
+                <img
+                    src="images/htc-logo.png"
+                    alt="Holy Trinity College Logo">
+
+                <img
+                    src="images/wildcats-logo.png"
+                    alt="Wildcats Logo">
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Reach & Teach
+                </strong>
+
+                <p>
+                    Holy Trinity College
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="developers">
+
+            Developed by:
+
+            <span>
+                Ruther Paul Pegarit
+            </span>
+
+            <span>•</span>
+
+            <span>
+                Jonald Dave Artajo
+            </span>
+
+            <span>•</span>
+
+            <span>
+                Oliver Lumasag
+            </span>
+
+        </div>
+
+
+        <p class="copyright">
+
+            © 2026 Reach & Teach.
+            All Rights Reserved.
+
+        </p>
+
+    </footer>
+
+    </div>
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="script.js"></script>
+</body>
+
+</html>
