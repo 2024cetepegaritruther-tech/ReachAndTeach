@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        REACH & TEACH — Admin Dashboard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div id="adminLoginView" class="login-body">
+
+    <main class="login-page">
+
+        <article class="login-card">
+
+            <div class="auth-card-topbar" aria-hidden="true">
+                <span></span><span></span><span></span>
+            </div>
+
+            <div class="login-symbol" aria-hidden="true">
+                <span class="login-symbol-head"></span>
+                <span class="login-symbol-body"></span>
+            </div>
+
+            <span class="auth-eyebrow">REACH &amp; TEACH</span>
+
+            <h1>Welcome back</h1>
+
+            <p class="auth-card-description">
+                Log in to continue to the administration portal.
+            </p>
+
+            <form id="loginForm" novalidate>
+
+                <div class="auth-field">
+                    <label for="email">Email address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="name@example.com"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">Password</label>
+
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            id="passwordToggle"
+                            class="password-toggle"
+                            aria-label="Show password"
+                        >👁</button>
+                    </div>
+                </div>
+
+                <div class="admin-login-access-note">
+                    Administrator access only.
+                </div>
+
+                <div
+                    id="loginMessage"
+                    class="login-message"
+                    role="alert"
+                    aria-live="polite"
+                ></div>
+
+                <button
+                    type="submit"
+                    id="loginButton"
+                    class="auth-primary-btn auth-submit-btn"
+                >
+                    Continue
+                </button>
+
+            </form>
+
+            <div class="login-footer">
+                <span>REACH &amp; TEACH</span>
+                <span>Admin Portal</span>
+            </div>
+
+        </article>
+
+    </main>
+
+</div>
+
+
+<div id="adminApp" class="admin-app-hidden">
+
+
+<!-- ======================================================
+     SIDEBAR
+====================================================== -->
+
+<aside class="sidebar">
+
+
+    <div class="sidebar-brand">
+
+        <div class="brand-icon">
+            RT
+        </div>
+
+        <div>
+
+            <h2>
+                REACH & TEACH
+            </h2>
+
+            <span>
+                ADMIN PANEL
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+
+        <button
+            class="nav-item active"
+            data-page="dashboard"
+        >
+
+            <span>▣</span>
+
+            Dashboard
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="students"
+        >
+
+            <span>👨‍🎓</span>
+
+            Students
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="appointments"
+        >
+
+            <span>📅</span>
+
+            Appointments
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="moods"
+        >
+
+            <span>😊</span>
+
+            Mood Monitoring
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="sessions"
+        >
+
+            <span>🗣</span>
+
+            Counseling Sessions
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="counselors"
+        >
+
+            <span>👨‍💼</span>
+
+            Counselors
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="resources"
+        >
+
+            <span>📚</span>
+
+            Wellness Resources
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="feedback"
+        >
+
+            <span>💬</span>
+
+            Feedback
+
+        </button>
+
+
+        <button
+            class="nav-item"
+            data-page="mood_records"
+        >
+
+            <span>📊</span>
+
+            Mood Records
+
+        </button>
+
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logoutButton"
+            class="logout-button"
+        >
+
+            🚪
+
+            Logout
+
+        </button>
+
+    </div>
+
+
+</aside>
+
+
+<!-- ======================================================
+     MAIN CONTENT
+====================================================== -->
+
+<main class="main-content">
+
+
+    <!-- TOP BAR -->
+
+    <header class="topbar">
+
+        <div>
+
+            <h1 id="pageTitle">
+                Dashboard
+            </h1>
+
+            <p id="pageSubtitle">
+                Welcome to the REACH & TEACH administration portal.
+            </p>
+
+        </div>
+
+
+        <div class="admin-profile">
+
+            <div class="admin-avatar">
+                A
+            </div>
+
+            <div>
+
+                <strong id="adminName">
+                    Admin
+                </strong>
+
+                <span id="adminRole">
+                    Administrator
+                </span>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==================================================
+         DASHBOARD PAGE
+    ================================================== -->
+
+    <section
+        id="dashboardPage"
+        class="page-section active"
+    >
+
+
+        <!-- STAT CARDS -->
+
+        <div class="stats-grid">
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    👨‍🎓
+                </div>
+
+                <div>
+
+                    <span>
+                        Total Students
+                    </span>
+
+                    <strong id="studentCount">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    📅
+                </div>
+
+                <div>
+
+                    <span>
+                        Appointments
+                    </span>
+
+                    <strong id="appointmentCount">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    🗣
+                </div>
+
+                <div>
+
+                    <span>
+                        Counseling Sessions
+                    </span>
+
+                    <strong id="sessionCount">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    😊
+                </div>
+
+                <div>
+
+                    <span>
+                        Mood Assessments
+                    </span>
+
+                    <strong id="moodCount">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- QUICK ACTIONS -->
+
+        <div class="dashboard-grid">
+
+
+            <div class="dashboard-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>
+                            Quick Actions
+                        </h2>
+
+                        <p>
+                            Manage your system records.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="quick-actions">
+
+
+                    <button
+                        class="quick-action"
+                        data-page="students"
+                    >
+
+                        <span>
+                            👨‍🎓
+                        </span>
+
+                        <strong>
+                            Manage Students
+                        </strong>
+
+                    </button>
+
+
+                    <button
+                        class="quick-action"
+                        data-page="appointments"
+                    >
+
+                        <span>
+                            📅
+                        </span>
+
+                        <strong>
+                            Appointments
+                        </strong>
+
+                    </button>
+
+
+                    <button
+                        class="quick-action"
+                        data-page="moods"
+                    >
+
+                        <span>
+                            😊
+                        </span>
+
+                        <strong>
+                            Mood Monitoring
+                        </strong>
+
+                    </button>
+
+
+                    <button
+                        class="quick-action"
+                        data-page="resources"
+                    >
+
+                        <span>
+                            📚
+                        </span>
+
+                        <strong>
+                            Resources
+                        </strong>
+
+                    </button>
+
+
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>
+                            System Information
+                        </h2>
+
+                        <p>
+                            REACH & TEACH
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="system-info">
+
+
+                    <div>
+
+                        <span>
+                            System
+                        </span>
+
+                        <strong>
+                            Online Guidance Counseling
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Database
+                        </span>
+
+                        <strong>
+                            MySQL — reachandteach
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Server
+                        </span>
+
+                        <strong>
+                            Node.js
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong class="status-online">
+                            ● Online
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+    <!-- ==================================================
+         DATA PAGE
+    ================================================== -->
+
+    <section
+        id="dataPage"
+        class="page-section"
+    >
+
+
+        <div class="data-card">
+
+
+            <div class="data-header">
+
+
+                <div>
+
+                    <h2 id="dataTitle">
+                        Students
+                    </h2>
+
+                    <p id="dataDescription">
+                        Manage system records.
+                    </p>
+
+                </div>
+
+
+                
+
+
+            </div>
+
+
+            <div class="table-tools">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search records..."
+                >
+
+                <button
+                    id="refreshButton"
+                    class="secondary-button"
+                >
+
+                    ↻ Refresh
+
+                </button>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+                    <thead id="tableHead">
+
+                    </thead>
+
+                    <tbody id="tableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div
+                id="emptyState"
+                class="empty-state"
+            >
+
+                No records found.
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+<!-- ======================================================
+     MODAL
+====================================================== -->
+
+<div
+    id="recordModal"
+    class="modal"
+>
+
+
+    <div class="modal-card">
+
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="modalTitle">
+                    Add Record
+                </h2>
+
+                <p>
+                    Enter the information below.
+                </p>
+
+            </div>
+
+
+            <button
+                id="closeModal"
+                class="close-button"
+            >
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <form id="recordForm">
+
+            <div
+                id="formFields"
+                class="form-fields"
+            ></div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelButton"
+                    class="secondary-button"
+                >
+
+                    Cancel
+
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+
+                    Save Record
+
+                </button>
+
+            </div>
+
+        </form>
+
+
+    </div>
+
+
+</div>
+
+
+<!-- ======================================================
+     TOAST
+====================================================== -->
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+
+
+</div>
+
+<script src="./script.js"></script>
+
+</body>
+</html>
