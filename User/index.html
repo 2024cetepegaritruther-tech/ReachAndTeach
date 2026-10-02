@@ -29,6 +29,38 @@
         }
     </style>
 
+
+<style>
+    .feedback-session-note {
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(0, 128, 96, .08);
+        color: #496158;
+        font-size: 13px;
+    }
+    .feedback-stars {
+        display: flex;
+        gap: 6px;
+        margin: 6px 0 18px;
+    }
+    .feedback-star {
+        border: 0;
+        background: transparent;
+        color: #cbd5e1;
+        font-size: 34px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px;
+        transition: transform .12s ease, color .12s ease;
+    }
+    .feedback-star:hover,
+    .feedback-star.selected {
+        color: #f59e0b;
+        transform: translateY(-1px);
+    }
+</style>
+
 </head>
 
 
@@ -359,6 +391,16 @@
                 onclick="openReservation()">
 
                 Reserve a Call
+
+            </button>
+
+
+            <button
+                type="button"
+                class="nav-feedback"
+                onclick="openFeedback()">
+
+                Feedback
 
             </button>
 
@@ -811,6 +853,65 @@
 
     </section>
 
+
+
+    <!-- =====================================================
+         FEEDBACK MODAL
+    ====================================================== -->
+
+    <div
+        id="feedbackModal"
+        class="modal-overlay feedback-modal"
+        aria-hidden="true">
+
+        <div class="feedback-window">
+
+            <div class="feedback-header">
+                <div>
+                    <span class="section-label">COUNSELING EXPERIENCE</span>
+                    <h2>Share Your Feedback</h2>
+                    <p>Tell us about your counseling experience.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="close-button"
+                    onclick="closeFeedback()"
+                    aria-label="Close feedback">
+                    ×
+                </button>
+            </div>
+
+            <form id="feedbackForm" class="feedback-form" novalidate>
+                <p class="feedback-session-note">You can share your feedback anytime. It will be linked automatically to your most recent counseling session when available.</p>
+
+                <label>How would you rate your counseling experience?</label>
+                <div class="feedback-stars" role="group" aria-label="Counseling experience rating">
+                    <button type="button" class="feedback-star" data-rating="1" aria-label="1 star" aria-pressed="false">★</button>
+                    <button type="button" class="feedback-star" data-rating="2" aria-label="2 stars" aria-pressed="false">★</button>
+                    <button type="button" class="feedback-star" data-rating="3" aria-label="3 stars" aria-pressed="false">★</button>
+                    <button type="button" class="feedback-star" data-rating="4" aria-label="4 stars" aria-pressed="false">★</button>
+                    <button type="button" class="feedback-star" data-rating="5" aria-label="5 stars" aria-pressed="false">★</button>
+                </div>
+                <input type="hidden" id="feedbackRating" name="rating">
+
+                <label for="feedbackComments">Your Feedback</label>
+                <textarea
+                    id="feedbackComments"
+                    rows="5"
+                    maxlength="1000"
+                    placeholder="Write about your counseling experience..."></textarea>
+
+                <p id="feedbackMessage" class="feedback-message" role="status" aria-live="polite"></p>
+
+                <div class="feedback-actions">
+                    <button type="button" class="secondary-button" onclick="closeFeedback()">Cancel</button>
+                    <button type="submit" class="primary-button" id="submitFeedbackButton">Submit Feedback</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
 
 
     <!-- =====================================================

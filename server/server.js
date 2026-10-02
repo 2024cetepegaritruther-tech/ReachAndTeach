@@ -124,6 +124,175 @@ function authenticateToken(req, res, next) {
     }
 }
 
+
+// --------------------------------------------------
+// ENSURE COUNSELING SESSION FOR CONFIRMED APPOINTMENT
+// Creates the counseling-session record that belongs to an
+// accepted appointment. Existing sessions are preserved.
+// --------------------------------------------------
+
+function normalizeAppointmentTimeForSession(value) {
+    const text = String(value || "").trim();
+
+    if (!text) {
+        return null;
+    }
+
+    // The student interface stores appointment times such as "2:00 PM",
+    // while MySQL TIME columns require a 24-hour value such as "14:00:00".
+    const twelveHourMatch = text.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
+
+    if (twelveHourMatch) {
+        let hour = Number(twelveHourMatch[1]);
+        const minute = Number(twelveHourMatch[2]);
+        const second = Number(twelveHourMatch[3] || 0);
+        const meridiem = twelveHourMatch[4].toUpperCase();
+
+        if (
+            hour < 1 ||
+            hour > 12 ||
+            minute < 0 ||
+            minute > 59 ||
+            second < 0 ||
+            second > 59
+        ) {
+            return null;
+        }
+
+        if (meridiem === "AM") {
+            hour = hour === 12 ? 0 : hour;
+        } else {
+            hour = hour === 12 ? 12 : hour + 12;
+        }
+
+        return [
+            String(hour).padStart(2, "0"),
+            String(minute).padStart(2, "0"),
+            String(second).padStart(2, "0")
+        ].join(":");
+    }
+
+    // Also accept an already-normalized MySQL time.
+    const twentyFourHourMatch = text.match(
+        /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+    );
+
+    if (twentyFourHourMatch) {
+        const hour = Number(twentyFourHourMatch[1]);
+        const minute = Number(twentyFourHourMatch[2]);
+        const second = Number(twentyFourHourMatch[3] || 0);
+
+        if (
+            hour > 23 ||
+            minute > 59 ||
+            second > 59
+        ) {
+            return null;
+        }
+
+        return [
+            String(hour).padStart(2, "0"),
+            String(minute).padStart(2, "0"),
+            String(second).padStart(2, "0")
+        ].join(":");
+    }
+
+    return null;
+}
+
+async function ensureCounselingSessionForAppointment(appointmentID) {
+
+    const numericAppointmentID = Number(appointmentID);
+
+    if (!Number.isInteger(numericAppointmentID) || numericAppointmentID <= 0) {
+        return null;
+    }
+
+    const [appointments] = await pool.query(
+        `
+        SELECT
+            AppointmentID,
+            StudentID,
+            CounselorID,
+            AppointmentDate,
+            AppointmentTime,
+            Reason,
+            Status
+        FROM appointments
+        WHERE AppointmentID = ?
+        LIMIT 1
+        `,
+        [numericAppointmentID]
+    );
+
+    if (appointments.length === 0) {
+        return null;
+    }
+
+    const appointment = appointments[0];
+    const status = String(appointment.Status || "").toLowerCase();
+
+    if (status !== "confirmed") {
+        return null;
+    }
+
+    const sessionTime = normalizeAppointmentTimeForSession(
+        appointment.AppointmentTime
+    );
+
+    if (!sessionTime) {
+        throw new Error(
+            "Invalid appointment time. Please use a valid time such as 2:00 PM."
+        );
+    }
+
+    const [existingSessions] = await pool.query(
+        `
+        SELECT SessionID
+        FROM counseling_session
+        WHERE StudentID = ?
+          AND SessionDate = ?
+          AND TIME_FORMAT(SessionTime, '%H:%i:%s') = ?
+        ORDER BY SessionID DESC
+        LIMIT 1
+        `,
+        [
+            appointment.StudentID,
+            appointment.AppointmentDate,
+            sessionTime
+        ]
+    );
+
+    if (existingSessions.length > 0) {
+        return existingSessions[0].SessionID;
+    }
+
+    const [result] = await pool.query(
+        `
+        INSERT INTO counseling_session
+        (
+            StudentID,
+            CounselorID,
+            SessionDate,
+            SessionTime,
+            SessionType,
+            SessionStatus,
+            Notes
+        )
+        VALUES (?, ?, ?, ?, 'Individual Counseling', 'Scheduled', ?)
+        `,
+        [
+            appointment.StudentID,
+            appointment.CounselorID || null,
+            appointment.AppointmentDate,
+            sessionTime,
+            appointment.Reason || null
+        ]
+    );
+
+    return result.insertId;
+}
+
 // --------------------------------------------------
 // REGISTER STUDENT
 // --------------------------------------------------
@@ -942,15 +1111,16 @@ app.get(
                 `
                 SELECT
                     ma.AssessmentID,
+                    ma.StudentID,
                     ma.SessionID,
                     ma.AssessmentDate,
                     ma.MoodScore,
                     ma.MoodLevel,
                     ma.Remarks
                 FROM mood_assessment ma
-                INNER JOIN counseling_session cs
+                LEFT JOIN counseling_session cs
                     ON ma.SessionID = cs.SessionID
-                WHERE cs.StudentID = ?
+                WHERE ma.StudentID = ?
                 ORDER BY ma.AssessmentDate DESC, ma.AssessmentID DESC
                 `,
                 [studentID]
@@ -968,7 +1138,7 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                message: "Unable to load mood records."
+                message: "Unable to load mood assessments."
             });
         }
     }
@@ -1044,15 +1214,17 @@ app.post(
                 `
                 INSERT INTO mood_assessment
                 (
+                    StudentID,
                     SessionID,
                     AssessmentDate,
                     MoodScore,
                     MoodLevel,
                     Remarks
                 )
-                VALUES (?, CURDATE(), ?, ?, ?)
+                VALUES (?, ?, CURDATE(), ?, ?, ?)
                 `,
                 [
+                    studentID,
                     sessionID,
                     moodScore,
                     moodLevel,
@@ -1073,6 +1245,212 @@ app.post(
             res.status(500).json({
                 success: false,
                 message: "Unable to save your mood.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// STUDENT COUNSELING SESSIONS FOR FEEDBACK
+// --------------------------------------------------
+
+app.get(
+    "/api/student/sessions",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (req.user.Role !== "Student") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Student access required."
+                });
+            }
+
+            const [rows] = await pool.query(
+                `
+                SELECT
+                    cs.SessionID,
+                    cs.StudentID,
+                    cs.CounselorID,
+                    cs.SessionDate,
+                    cs.SessionTime,
+                    cs.SessionType,
+                    cs.SessionStatus,
+                    c.CounselorName
+                FROM counseling_session cs
+                INNER JOIN students s
+                    ON cs.StudentID = s.StudentID
+                LEFT JOIN counselors c
+                    ON cs.CounselorID = c.CounselorID
+                WHERE s.UserID = ?
+                ORDER BY cs.SessionDate DESC, cs.SessionID DESC
+                `,
+                [req.user.UserID]
+            );
+
+            res.json({
+                success: true,
+                data: rows,
+                sessions: rows
+            });
+        } catch (error) {
+            console.error("Student sessions load error:", error);
+            res.status(500).json({
+                success: false,
+                message: "Unable to load counseling sessions."
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// SUBMIT STUDENT FEEDBACK
+// --------------------------------------------------
+
+app.post(
+    "/api/student/feedback",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (req.user.Role !== "Student") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Student access required."
+                });
+            }
+
+            const sessionID = Number(
+                req.body.SessionID ?? req.body.sessionID
+            );
+            const rating = Number(
+                req.body.Rating ?? req.body.rating
+            );
+            const comments = String(
+                req.body.Comments ?? req.body.comments ?? ""
+            ).trim();
+
+            if (!Number.isInteger(sessionID) || sessionID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please select a counseling session."
+                });
+            }
+
+            if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please select a rating from 1 to 5."
+                });
+            }
+
+            if (!comments) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please write your feedback."
+                });
+            }
+
+            const [students] = await pool.query(
+                `
+                SELECT StudentID
+                FROM students
+                WHERE UserID = ?
+                LIMIT 1
+                `,
+                [req.user.UserID]
+            );
+
+            if (students.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Student profile not found."
+                });
+            }
+
+            const studentID = students[0].StudentID;
+
+            const [sessions] = await pool.query(
+                `
+                SELECT
+                    SessionID,
+                    CounselorID,
+                    SessionStatus
+                FROM counseling_session
+                WHERE SessionID = ?
+                  AND StudentID = ?
+                LIMIT 1
+                `,
+                [sessionID, studentID]
+            );
+
+            if (sessions.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "The selected counseling session was not found."
+                });
+            }
+
+            const session = sessions[0];
+            const status = String(session.SessionStatus || "").toLowerCase();
+
+            if (status && status !== "completed") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Feedback can be submitted after the counseling session is completed."
+                });
+            }
+
+            const [existing] = await pool.query(
+                `
+                SELECT FeedbackID
+                FROM feedback
+                WHERE StudentID = ?
+                  AND SessionID = ?
+                LIMIT 1
+                `,
+                [studentID, sessionID]
+            );
+
+            if (existing.length > 0) {
+                return res.status(409).json({
+                    success: false,
+                    message: "You have already submitted feedback for this counseling session."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                INSERT INTO feedback
+                (
+                    StudentID,
+                    SessionID,
+                    CounselorID,
+                    Rating,
+                    Comments,
+                    FeedbackDate
+                )
+                VALUES (?, ?, ?, ?, ?, CURDATE())
+                `,
+                [
+                    studentID,
+                    sessionID,
+                    session.CounselorID || null,
+                    rating,
+                    comments
+                ]
+            );
+
+            res.status(201).json({
+                success: true,
+                message: "Thank you. Your feedback was submitted successfully.",
+                FeedbackID: result.insertId
+            });
+        } catch (error) {
+            console.error("Student feedback submit error:", error);
+            res.status(500).json({
+                success: false,
+                message: "Unable to submit feedback.",
                 error: error.message
             });
         }
@@ -1415,12 +1793,16 @@ app.put(
 
 // --------------------------------------------------
 // ADMIN STUDENT DELETE
+// Deletes the student profile, login account, and every record
+// belonging to that student in the current application schema.
 // --------------------------------------------------
 
 app.delete(
     "/api/admin/students/:id",
     authenticateToken,
     async (req, res) => {
+
+        let connection;
 
         try {
 
@@ -1440,24 +1822,97 @@ app.delete(
                 });
             }
 
-            const [students] = await pool.query(
+            connection = await pool.getConnection();
+            await connection.beginTransaction();
+
+            const [students] = await connection.query(
                 `
-                SELECT StudentID, UserID
-                FROM students
-                WHERE StudentID = ?
+                SELECT
+                    s.StudentID,
+                    s.UserID
+                FROM students s
+                WHERE s.StudentID = ?
                 LIMIT 1
+                FOR UPDATE
                 `,
                 [studentId]
             );
 
             if (students.length === 0) {
+                await connection.rollback();
                 return res.status(404).json({
                     success: false,
                     message: "Student record not found."
                 });
             }
 
-            await pool.query(
+            const userId = students[0].UserID;
+
+            // Messages depend on conversations, so remove messages first.
+            const [conversations] = await connection.query(
+                `
+                SELECT ConversationID
+                FROM conversations
+                WHERE StudentID = ?
+                `,
+                [studentId]
+            );
+
+            const conversationIds = conversations
+                .map(row => row.ConversationID)
+                .filter(id => id !== null && id !== undefined);
+
+            if (conversationIds.length > 0) {
+                await connection.query(
+                    `
+                    DELETE FROM messages
+                    WHERE ConversationID IN (?)
+                    `,
+                    [conversationIds]
+                );
+            }
+
+            await connection.query(
+                `
+                DELETE FROM feedback
+                WHERE StudentID = ?
+                `,
+                [studentId]
+            );
+
+            await connection.query(
+                `
+                DELETE FROM mood_assessment
+                WHERE StudentID = ?
+                `,
+                [studentId]
+            );
+
+            await connection.query(
+                `
+                DELETE FROM counseling_session
+                WHERE StudentID = ?
+                `,
+                [studentId]
+            );
+
+            await connection.query(
+                `
+                DELETE FROM appointments
+                WHERE StudentID = ?
+                `,
+                [studentId]
+            );
+
+            await connection.query(
+                `
+                DELETE FROM conversations
+                WHERE StudentID = ?
+                `,
+                [studentId]
+            );
+
+            await connection.query(
                 `
                 DELETE FROM students
                 WHERE StudentID = ?
@@ -1465,12 +1920,35 @@ app.delete(
                 [studentId]
             );
 
+            // Delete the login account last. This makes the old email/password
+            // unusable for login because the users row no longer exists.
+            if (userId !== null && userId !== undefined) {
+                await connection.query(
+                    `
+                    DELETE FROM users
+                    WHERE UserID = ?
+                      AND Role = 'Student'
+                    `,
+                    [userId]
+                );
+            }
+
+            await connection.commit();
+
             return res.json({
                 success: true,
-                message: "Student record deleted successfully."
+                message: "Student account and all related data were permanently deleted."
             });
 
         } catch (error) {
+
+            if (connection) {
+                try {
+                    await connection.rollback();
+                } catch (rollbackError) {
+                    console.error("Student delete rollback error:", rollbackError);
+                }
+            }
 
             console.error("Admin student delete error:", error);
 
@@ -1480,14 +1958,22 @@ app.delete(
             ) {
                 return res.status(409).json({
                     success: false,
-                    message: "This student cannot be deleted because related records still exist."
+                    message: "The student could not be deleted because another related record still references the account."
                 });
             }
 
             return res.status(500).json({
                 success: false,
-                message: "Unable to delete student record."
+                message: "Unable to permanently delete the student account.",
+                error: error.message
             });
+
+        } finally {
+
+            if (connection) {
+                connection.release();
+            }
+
         }
     }
 );
@@ -1557,7 +2043,9 @@ app.get(
 );
 
 // --------------------------------------------------
-// ADMIN UPDATE APPOINTMENT STATUS
+// ADMIN UPDATE APPOINTMENT
+// Supports both the Accept/Decline status actions and the
+// full Edit form used by the Admin table.
 // --------------------------------------------------
 
 app.put(
@@ -1575,7 +2063,57 @@ app.put(
             }
 
             const appointmentID = Number(req.params.id);
-            const { status } = req.body;
+
+            if (!Number.isInteger(appointmentID) || appointmentID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid appointment ID."
+                });
+            }
+
+            const [existingRows] = await pool.query(
+                `
+                SELECT
+                    AppointmentDate,
+                    AppointmentTime,
+                    Reason,
+                    Status
+                FROM appointments
+                WHERE AppointmentID = ?
+                LIMIT 1
+                `,
+                [appointmentID]
+            );
+
+            if (existingRows.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Appointment not found."
+                });
+            }
+
+            const current = existingRows[0];
+            const body = req.body || {};
+
+            const appointmentDate =
+                body.AppointmentDate ??
+                body.appointmentDate ??
+                current.AppointmentDate;
+
+            const appointmentTime =
+                body.AppointmentTime ??
+                body.appointmentTime ??
+                current.AppointmentTime;
+
+            const reason =
+                body.Reason ??
+                body.reason ??
+                current.Reason;
+
+            const status =
+                body.Status ??
+                body.status ??
+                current.Status;
 
             const allowedStatuses = [
                 "Pending",
@@ -1591,16 +2129,119 @@ app.put(
                 });
             }
 
-            const [result] = await pool.query(
+            if (!String(appointmentDate || "").trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Appointment date is required."
+                });
+            }
+
+            if (!String(appointmentTime || "").trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Appointment time is required."
+                });
+            }
+
+            await pool.query(
                 `
                 UPDATE appointments
-                SET Status = ?
+                SET
+                    AppointmentDate = ?,
+                    AppointmentTime = ?,
+                    Reason = ?,
+                    Status = ?
                 WHERE AppointmentID = ?
                 `,
                 [
+                    appointmentDate,
+                    appointmentTime,
+                    reason || null,
                     status,
                     appointmentID
                 ]
+            );
+
+            if (String(status).toLowerCase() === "confirmed") {
+                try {
+                    await ensureCounselingSessionForAppointment(appointmentID);
+                } catch (sessionError) {
+                    // Do not leave an appointment marked Confirmed when its
+                    // required counseling-session record could not be created.
+                    await pool.query(
+                        `
+                        UPDATE appointments
+                        SET
+                            AppointmentDate = ?,
+                            AppointmentTime = ?,
+                            Reason = ?,
+                            Status = ?
+                        WHERE AppointmentID = ?
+                        `,
+                        [
+                            current.AppointmentDate,
+                            current.AppointmentTime,
+                            current.Reason || null,
+                            current.Status,
+                            appointmentID
+                        ]
+                    );
+
+                    throw sessionError;
+                }
+            }
+
+            res.json({
+                success: true,
+                message: "Appointment updated successfully."
+            });
+
+        } catch (error) {
+
+            console.error("Admin appointment update error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to update appointment.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN DELETE APPOINTMENT
+// --------------------------------------------------
+
+app.delete(
+    "/api/admin/appointments/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const appointmentID = Number(req.params.id);
+
+            if (!Number.isInteger(appointmentID) || appointmentID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid appointment ID."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                DELETE FROM appointments
+                WHERE AppointmentID = ?
+                `,
+                [appointmentID]
             );
 
             if (result.affectedRows === 0) {
@@ -1612,16 +2253,17 @@ app.put(
 
             res.json({
                 success: true,
-                message: "Appointment status updated."
+                message: "Appointment deleted successfully."
             });
 
         } catch (error) {
 
-            console.error(error);
+            console.error("Admin appointment delete error:", error);
 
             res.status(500).json({
                 success: false,
-                message: "Unable to update appointment."
+                message: "Unable to delete appointment.",
+                error: error.message
             });
         }
     }
@@ -1649,6 +2291,7 @@ app.get(
                 `
                 SELECT
                     ma.AssessmentID,
+                    ma.StudentID,
                     ma.SessionID,
                     CONCAT(
                         s.FirstName,
@@ -1660,10 +2303,8 @@ app.get(
                     ma.MoodLevel,
                     ma.Remarks
                 FROM mood_assessment ma
-                LEFT JOIN counseling_session cs
-                    ON ma.SessionID = cs.SessionID
                 LEFT JOIN students s
-                    ON cs.StudentID = s.StudentID
+                    ON ma.StudentID = s.StudentID
                 ORDER BY
                     ma.AssessmentDate DESC,
                     ma.AssessmentID DESC
@@ -2141,6 +2782,7 @@ app.get(
             const [appointments] = await pool.query(
                 `
                 SELECT
+                    a.AppointmentID,
                     a.Status,
                     a.CounselorID,
                     c.CounselorName
@@ -2155,6 +2797,15 @@ app.get(
             );
 
             const appointment = appointments[0] || null;
+
+            // Recover older confirmed appointments that were accepted before
+            // counseling-session creation was connected to appointment approval.
+            if (appointment?.Status && String(appointment.Status).toLowerCase() === "confirmed") {
+                await ensureCounselingSessionForAppointment(
+                    appointment.AppointmentID
+                );
+            }
+
             const appointmentStatus = String(
                 appointment?.Status || "Pending"
             ).toLowerCase();
@@ -2483,6 +3134,1021 @@ app.post(
             res.status(500).json({
                 success: false,
                 message: "Unable to send reply."
+            });
+        }
+    }
+);
+
+
+// --------------------------------------------------
+// ADMIN COUNSELING SESSIONS
+// --------------------------------------------------
+
+app.get(
+    "/api/admin/sessions",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const [rows] = await pool.query(
+                `
+                SELECT
+                    cs.SessionID,
+                    cs.StudentID,
+                    CONCAT(
+                        s.FirstName,
+                        ' ',
+                        s.LastName
+                    ) AS StudentName,
+                    cs.CounselorID,
+                    c.CounselorName,
+                    cs.SessionDate,
+                    cs.SessionTime,
+                    cs.SessionType,
+                    cs.SessionStatus,
+                    cs.Notes,
+                    cs.CreatedAt
+                FROM counseling_session cs
+                INNER JOIN students s
+                    ON cs.StudentID = s.StudentID
+                LEFT JOIN counselors c
+                    ON cs.CounselorID = c.CounselorID
+                ORDER BY
+                    cs.SessionDate DESC,
+                    cs.SessionTime DESC,
+                    cs.SessionID DESC
+                `
+            );
+
+            res.json({
+                success: true,
+                data: rows
+            });
+
+        } catch (error) {
+
+            console.error("Admin sessions load error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load counseling sessions.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN COUNSELING SESSION CHAT
+// --------------------------------------------------
+
+app.get(
+    "/api/admin/sessions/:id/chat",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const sessionID = Number(req.params.id);
+            if (!Number.isInteger(sessionID) || sessionID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid counseling session ID."
+                });
+            }
+
+            const [sessions] = await pool.query(
+                `
+                SELECT
+                    cs.SessionID,
+                    cs.StudentID,
+                    cs.CounselorID,
+                    cs.SessionStatus,
+                    CONCAT(s.FirstName, ' ', s.LastName) AS StudentName
+                FROM counseling_session cs
+                INNER JOIN students s
+                    ON cs.StudentID = s.StudentID
+                WHERE cs.SessionID = ?
+                LIMIT 1
+                `,
+                [sessionID]
+            );
+
+            if (sessions.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Counseling session not found."
+                });
+            }
+
+            const session = sessions[0];
+
+            let [conversations] = await pool.query(
+                `
+                SELECT
+                    ConversationID,
+                    StudentID,
+                    CounselorID,
+                    CreatedAt
+                FROM conversations
+                WHERE StudentID = ?
+                ORDER BY ConversationID DESC
+                LIMIT 1
+                `,
+                [session.StudentID]
+            );
+
+            let conversationID;
+
+            if (conversations.length === 0) {
+                const [result] = await pool.query(
+                    `
+                    INSERT INTO conversations
+                    (StudentID, CounselorID)
+                    VALUES (?, ?)
+                    `,
+                    [session.StudentID, session.CounselorID || null]
+                );
+
+                conversationID = result.insertId;
+
+                [conversations] = await pool.query(
+                    `
+                    SELECT
+                        ConversationID,
+                        StudentID,
+                        CounselorID,
+                        CreatedAt
+                    FROM conversations
+                    WHERE ConversationID = ?
+                    LIMIT 1
+                    `,
+                    [conversationID]
+                );
+            } else {
+                conversationID = conversations[0].ConversationID;
+            }
+
+            const [messages] = await pool.query(
+                `
+                SELECT
+                    MessageID,
+                    ConversationID,
+                    SenderType,
+                    SenderID,
+                    MessageText,
+                    SentAt
+                FROM messages
+                WHERE ConversationID = ?
+                ORDER BY SentAt ASC, MessageID ASC
+                `,
+                [conversationID]
+            );
+
+            res.json({
+                success: true,
+                conversation: {
+                    ...conversations[0],
+                    SessionID: session.SessionID,
+                    StudentID: session.StudentID,
+                    StudentName: session.StudentName,
+                    CounselorID:
+                        conversations[0]?.CounselorID ||
+                        session.CounselorID ||
+                        null,
+                    SessionStatus: session.SessionStatus
+                },
+                messages
+            });
+        } catch (error) {
+            console.error("Admin counseling chat load error:", error);
+            res.status(500).json({
+                success: false,
+                message: "Unable to load counseling chat.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN FEEDBACK
+// --------------------------------------------------
+
+app.get(
+    "/api/admin/feedback",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const [rows] = await pool.query(
+                `
+                SELECT
+                    f.FeedbackID,
+                    f.StudentID,
+                    f.SessionID,
+                    f.Rating,
+                    f.Comments,
+                    f.FeedbackDate,
+                    f.CreatedAt,
+                    CONCAT(
+                        s.FirstName,
+                        ' ',
+                        s.LastName
+                    ) AS StudentName
+                FROM feedback f
+                INNER JOIN students s
+                    ON f.StudentID = s.StudentID
+                ORDER BY
+                    f.FeedbackDate DESC,
+                    f.FeedbackID DESC
+                `
+            );
+
+            res.json({
+                success: true,
+                data: rows
+            });
+
+        } catch (error) {
+
+            console.error("Admin feedback load error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load feedback.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN WELLNESS RESOURCES
+// --------------------------------------------------
+
+app.get(
+    "/api/admin/resources",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const [rows] = await pool.query(
+                `
+                SELECT
+                    ResourceID,
+                    ResourceTitle,
+                    ResourceType,
+                    Description,
+                    ResourceDate,
+                    CreatedAt
+                FROM resources
+                ORDER BY
+                    ResourceDate DESC,
+                    ResourceID DESC
+                `
+            );
+
+            res.json({
+                success: true,
+                data: rows
+            });
+
+        } catch (error) {
+
+            console.error("Admin resources load error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load wellness resources.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN COUNSELING SESSION UPDATE
+// --------------------------------------------------
+
+app.put(
+    "/api/admin/sessions/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const sessionID = Number(req.params.id);
+            const body = req.body || {};
+
+            if (!Number.isInteger(sessionID) || sessionID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid counseling session ID."
+                });
+            }
+
+            const sessionDate = String(body.SessionDate ?? "").trim();
+            const sessionTime = String(body.SessionTime ?? "").trim();
+            const sessionType = String(body.SessionType ?? "").trim();
+            const sessionStatus = String(body.SessionStatus ?? "").trim();
+            const notes = String(body.Notes ?? "").trim();
+
+            const allowedStatuses = [
+                "Scheduled",
+                "Ongoing",
+                "Completed",
+                "Cancelled"
+            ];
+
+            if (!sessionDate || !sessionTime || !sessionType) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Session date, time, and type are required."
+                });
+            }
+
+            if (!allowedStatuses.includes(sessionStatus)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid counseling session status."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                UPDATE counseling_session
+                SET
+                    SessionDate = ?,
+                    SessionTime = ?,
+                    SessionType = ?,
+                    SessionStatus = ?,
+                    Notes = ?
+                WHERE SessionID = ?
+                `,
+                [
+                    sessionDate,
+                    sessionTime,
+                    sessionType,
+                    sessionStatus,
+                    notes || null,
+                    sessionID
+                ]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Counseling session not found."
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Counseling session updated successfully."
+            });
+
+        } catch (error) {
+
+            console.error("Admin counseling session update error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to update counseling session.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN COUNSELING SESSION DELETE
+// Deletes child mood/feedback records first so foreign-key
+// constraints do not leave the Admin button broken.
+// --------------------------------------------------
+
+app.delete(
+    "/api/admin/sessions/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        let connection;
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const sessionID = Number(req.params.id);
+
+            if (!Number.isInteger(sessionID) || sessionID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid counseling session ID."
+                });
+            }
+
+            connection = await pool.getConnection();
+            await connection.beginTransaction();
+
+            const [sessions] = await connection.query(
+                `
+                SELECT SessionID
+                FROM counseling_session
+                WHERE SessionID = ?
+                LIMIT 1
+                FOR UPDATE
+                `,
+                [sessionID]
+            );
+
+            if (sessions.length === 0) {
+                await connection.rollback();
+                return res.status(404).json({
+                    success: false,
+                    message: "Counseling session not found."
+                });
+            }
+
+            await connection.query(
+                `
+                DELETE FROM feedback
+                WHERE SessionID = ?
+                `,
+                [sessionID]
+            );
+
+            await connection.query(
+                `
+                DELETE FROM mood_assessment
+                WHERE SessionID = ?
+                `,
+                [sessionID]
+            );
+
+            await connection.query(
+                `
+                DELETE FROM counseling_session
+                WHERE SessionID = ?
+                `,
+                [sessionID]
+            );
+
+            await connection.commit();
+
+            res.json({
+                success: true,
+                message: "Counseling session deleted successfully."
+            });
+
+        } catch (error) {
+
+            if (connection) {
+                try {
+                    await connection.rollback();
+                } catch (rollbackError) {
+                    console.error("Session delete rollback error:", rollbackError);
+                }
+            }
+
+            console.error("Admin counseling session delete error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to delete counseling session.",
+                error: error.message
+            });
+
+        } finally {
+
+            if (connection) {
+                connection.release();
+            }
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN COUNSELOR UPDATE
+// --------------------------------------------------
+
+app.put(
+    "/api/admin/counselors/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const counselorID = Number(req.params.id);
+            const counselorName = String(req.body?.CounselorName ?? "").trim();
+            const email = String(req.body?.Email ?? "").trim().toLowerCase();
+            const contactNumber = String(req.body?.ContactNumber ?? "").trim();
+
+            if (!Number.isInteger(counselorID) || counselorID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid counselor ID."
+                });
+            }
+
+            if (!counselorName || !email || !contactNumber) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Counselor name, email, and contact number are required."
+                });
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please enter a valid counselor email address."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                UPDATE counselors
+                SET
+                    CounselorName = ?,
+                    Email = ?,
+                    ContactNumber = ?
+                WHERE CounselorID = ?
+                `,
+                [counselorName, email, contactNumber, counselorID]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Counselor not found."
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Counselor updated successfully."
+            });
+
+        } catch (error) {
+
+            console.error("Admin counselor update error:", error);
+
+            if (error.code === "ER_DUP_ENTRY") {
+                return res.status(409).json({
+                    success: false,
+                    message: "That counselor email is already in use."
+                });
+            }
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to update counselor.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN COUNSELOR DELETE
+// Keeps historical records and removes only the counselor links.
+// --------------------------------------------------
+
+app.delete(
+    "/api/admin/counselors/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        let connection;
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const counselorID = Number(req.params.id);
+
+            if (!Number.isInteger(counselorID) || counselorID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid counselor ID."
+                });
+            }
+
+            connection = await pool.getConnection();
+            await connection.beginTransaction();
+
+            const [counselors] = await connection.query(
+                `
+                SELECT CounselorID
+                FROM counselors
+                WHERE CounselorID = ?
+                LIMIT 1
+                FOR UPDATE
+                `,
+                [counselorID]
+            );
+
+            if (counselors.length === 0) {
+                await connection.rollback();
+                return res.status(404).json({
+                    success: false,
+                    message: "Counselor not found."
+                });
+            }
+
+            await connection.query(
+                `
+                UPDATE appointments
+                SET CounselorID = NULL
+                WHERE CounselorID = ?
+                `,
+                [counselorID]
+            );
+
+            await connection.query(
+                `
+                UPDATE counseling_session
+                SET CounselorID = NULL
+                WHERE CounselorID = ?
+                `,
+                [counselorID]
+            );
+
+            await connection.query(
+                `
+                UPDATE feedback
+                SET CounselorID = NULL
+                WHERE CounselorID = ?
+                `,
+                [counselorID]
+            );
+
+            await connection.query(
+                `
+                DELETE FROM counselors
+                WHERE CounselorID = ?
+                `,
+                [counselorID]
+            );
+
+            await connection.commit();
+
+            res.json({
+                success: true,
+                message: "Counselor deleted successfully."
+            });
+
+        } catch (error) {
+
+            if (connection) {
+                try {
+                    await connection.rollback();
+                } catch (rollbackError) {
+                    console.error("Counselor delete rollback error:", rollbackError);
+                }
+            }
+
+            console.error("Admin counselor delete error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to delete counselor.",
+                error: error.message
+            });
+
+        } finally {
+
+            if (connection) {
+                connection.release();
+            }
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN FEEDBACK UPDATE
+// --------------------------------------------------
+
+app.put(
+    "/api/admin/feedback/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const feedbackID = Number(req.params.id);
+            const rating = Number(req.body?.Rating);
+            const comments = String(req.body?.Comments ?? "").trim();
+            const feedbackDate = String(req.body?.FeedbackDate ?? "").trim();
+
+            if (!Number.isInteger(feedbackID) || feedbackID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid feedback ID."
+                });
+            }
+
+            if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Rating must be a whole number from 1 to 5."
+                });
+            }
+
+            if (!comments || !feedbackDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Feedback and feedback date are required."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                UPDATE feedback
+                SET
+                    Rating = ?,
+                    Comments = ?,
+                    FeedbackDate = ?
+                WHERE FeedbackID = ?
+                `,
+                [rating, comments, feedbackDate, feedbackID]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Feedback record not found."
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Feedback updated successfully."
+            });
+
+        } catch (error) {
+
+            console.error("Admin feedback update error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to update feedback.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN FEEDBACK DELETE
+// --------------------------------------------------
+
+app.delete(
+    "/api/admin/feedback/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const feedbackID = Number(req.params.id);
+
+            if (!Number.isInteger(feedbackID) || feedbackID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid feedback ID."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                DELETE FROM feedback
+                WHERE FeedbackID = ?
+                `,
+                [feedbackID]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Feedback record not found."
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Feedback deleted successfully."
+            });
+
+        } catch (error) {
+
+            console.error("Admin feedback delete error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to delete feedback.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN WELLNESS RESOURCE UPDATE
+// --------------------------------------------------
+
+app.put(
+    "/api/admin/resources/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const resourceID = Number(req.params.id);
+            const resourceTitle = String(req.body?.ResourceTitle ?? "").trim();
+            const resourceType = String(req.body?.ResourceType ?? "").trim();
+            const description = String(req.body?.Description ?? "").trim();
+            const resourceDate = String(req.body?.ResourceDate ?? "").trim();
+
+            if (!Number.isInteger(resourceID) || resourceID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid resource ID."
+                });
+            }
+
+            if (!resourceTitle || !resourceType || !description || !resourceDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Resource title, type, description, and date are required."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                UPDATE resources
+                SET
+                    ResourceTitle = ?,
+                    ResourceType = ?,
+                    Description = ?,
+                    ResourceDate = ?
+                WHERE ResourceID = ?
+                `,
+                [resourceTitle, resourceType, description, resourceDate, resourceID]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Wellness resource not found."
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Wellness resource updated successfully."
+            });
+
+        } catch (error) {
+
+            console.error("Admin resource update error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to update wellness resource.",
+                error: error.message
+            });
+        }
+    }
+);
+
+// --------------------------------------------------
+// ADMIN WELLNESS RESOURCE DELETE
+// --------------------------------------------------
+
+app.delete(
+    "/api/admin/resources/:id",
+    authenticateToken,
+    async (req, res) => {
+
+        try {
+
+            if (req.user.Role !== "Admin") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin access required."
+                });
+            }
+
+            const resourceID = Number(req.params.id);
+
+            if (!Number.isInteger(resourceID) || resourceID <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid resource ID."
+                });
+            }
+
+            const [result] = await pool.query(
+                `
+                DELETE FROM resources
+                WHERE ResourceID = ?
+                `,
+                [resourceID]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Wellness resource not found."
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Wellness resource deleted successfully."
+            });
+
+        } catch (error) {
+
+            console.error("Admin resource delete error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to delete wellness resource.",
+                error: error.message
             });
         }
     }

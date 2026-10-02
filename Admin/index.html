@@ -20,6 +20,77 @@
         href="./style.css"
     >
 
+
+<style>
+    /* Counseling session chat popup */
+    .admin-chat-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 5000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.48);
+        backdrop-filter: blur(3px);
+    }
+    .admin-chat-modal.show { display: flex; }
+    .admin-chat-window {
+        width: min(560px, 96vw);
+        height: min(680px, 86vh);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    }
+    .admin-chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 18px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .admin-chat-header h3 { margin: 0 0 4px; font-size: 18px; }
+    .admin-chat-header p { margin: 0; color: #64748b; font-size: 13px; }
+    .admin-chat-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px;
+        background: #f8fafc;
+    }
+    .admin-chat-message {
+        max-width: 78%;
+        margin: 0 0 12px;
+        padding: 10px 13px;
+        border-radius: 14px;
+        word-break: break-word;
+    }
+    .admin-chat-message.student {
+        margin-right: auto;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+    }
+    .admin-chat-message.admin {
+        margin-left: auto;
+        background: #e0f2fe;
+        border: 1px solid #bae6fd;
+    }
+    .admin-chat-message strong { display: block; margin-bottom: 4px; font-size: 12px; color: #475569; }
+    .admin-chat-message p { margin: 0; white-space: pre-wrap; }
+    .admin-chat-message small { display: block; margin-top: 5px; color: #94a3b8; font-size: 10px; }
+    .admin-chat-system { text-align: center; color: #64748b; font-size: 13px; padding: 20px 10px; }
+    .admin-chat-compose { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e5e7eb; background: #ffffff; }
+    .admin-chat-compose input { flex: 1; min-width: 0; padding: 11px 13px; border: 1px solid #cbd5e1; border-radius: 10px; outline: none; }
+    .admin-chat-compose input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14, 165, 233, .12); }
+    .admin-chat-compose button { border: 0; border-radius: 10px; padding: 0 17px; font-weight: 700; cursor: pointer; background: #0284c7; color: #fff; }
+    .admin-chat-compose button:disabled { opacity: .55; cursor: not-allowed; }
+    .session-chat-button { border: 0; border-radius: 8px; padding: 7px 11px; cursor: pointer; font-weight: 700; background: #0284c7; color: #fff; }
+    .session-chat-button:hover { background: #0369a1; }
+</style>
+
 </head>
 
 
@@ -27,95 +98,138 @@
 
 <div id="adminLoginView" class="login-body">
 
-    <main class="login-page">
 
-        <article class="login-card">
+<main class="login-page">
 
-            <div class="auth-card-topbar" aria-hidden="true">
-                <span></span><span></span><span></span>
+
+    <div class="login-card">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                RT
             </div>
 
-            <div class="login-symbol" aria-hidden="true">
-                <span class="login-symbol-head"></span>
-                <span class="login-symbol-body"></span>
-            </div>
+            <h1>
+                REACH & TEACH
+            </h1>
 
-            <span class="auth-eyebrow">REACH &amp; TEACH</span>
-
-            <h1>Welcome back</h1>
-
-            <p class="auth-card-description">
-                Log in to continue to the administration portal.
+            <p>
+                Administration Portal
             </p>
 
-            <form id="loginForm" novalidate>
+        </div>
 
-                <div class="auth-field">
-                    <label for="email">Email address</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="name@example.com"
-                        autocomplete="username"
-                        required
-                    >
-                </div>
 
-                <div class="auth-field">
-                    <label for="password">Password</label>
+        <!-- LOGIN FORM -->
 
-                    <div class="password-wrapper">
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            placeholder="Enter your password"
-                            autocomplete="current-password"
-                            required
-                        >
+        <form id="loginForm">
 
-                        <button
-                            type="button"
-                            id="passwordToggle"
-                            class="password-toggle"
-                            aria-label="Show password"
-                        >👁</button>
-                    </div>
-                </div>
 
-                <div class="admin-login-access-note">
-                    Administrator access only.
-                </div>
+            <!-- EMAIL -->
 
-                <div
-                    id="loginMessage"
-                    class="login-message"
-                    role="alert"
-                    aria-live="polite"
-                ></div>
+            <div class="form-group">
 
-                <button
-                    type="submit"
-                    id="loginButton"
-                    class="auth-primary-btn auth-submit-btn"
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter admin email"
+                    autocomplete="username"
+                    required
                 >
-                    Continue
-                </button>
 
-            </form>
-
-            <div class="login-footer">
-                <span>REACH &amp; TEACH</span>
-                <span>Admin Portal</span>
             </div>
 
-        </article>
 
-    </main>
+            <!-- PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter admin password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+
+                    <button
+                        type="button"
+                        id="passwordToggle"
+                        class="password-toggle"
+                        aria-label="Show password"
+                    >
+
+                        👁
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- MESSAGE -->
+
+            <div
+                id="loginMessage"
+                class="login-message"
+            ></div>
+
+
+            <!-- LOGIN BUTTON -->
+
+            <button
+                type="submit"
+                id="loginButton"
+                class="login-button"
+            >
+
+                LOGIN
+
+            </button>
+
+
+        </form>
+
+
+        <!-- FOOTER -->
+
+        <div class="login-footer">
+
+            <span>
+                REACH & TEACH
+            </span>
+
+            <span>
+                Admin Portal
+            </span>
+
+        </div>
+
+
+    </div>
+
+
+</main>
+
 
 </div>
-
 
 <div id="adminApp" class="admin-app-hidden">
 
@@ -225,36 +339,12 @@
 
         <button
             class="nav-item"
-            data-page="resources"
-        >
-
-            <span>📚</span>
-
-            Wellness Resources
-
-        </button>
-
-
-        <button
-            class="nav-item"
             data-page="feedback"
         >
 
             <span>💬</span>
 
             Feedback
-
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-page="mood_records"
-        >
-
-            <span>📊</span>
-
-            Mood Records
 
         </button>
 
@@ -505,22 +595,6 @@
                     </button>
 
 
-                    <button
-                        class="quick-action"
-                        data-page="resources"
-                    >
-
-                        <span>
-                            📚
-                        </span>
-
-                        <strong>
-                            Resources
-                        </strong>
-
-                    </button>
-
-
                 </div>
 
             </div>
@@ -668,7 +742,7 @@
 
             <div class="table-wrapper">
 
-                <table class="data-table">
+                <table>
 
                     <thead id="tableHead">
 
@@ -786,6 +860,29 @@
 <!-- ======================================================
      TOAST
 ====================================================== -->
+
+
+<!-- ======================================================
+     COUNSELING SESSION CHAT
+====================================================== -->
+<div id="adminChatModal" class="admin-chat-modal" aria-hidden="true">
+    <div class="admin-chat-window" role="dialog" aria-modal="true" aria-labelledby="adminChatTitle">
+        <div class="admin-chat-header">
+            <div>
+                <h3 id="adminChatTitle">Counseling Chat</h3>
+                <p id="adminChatStudent">Student</p>
+            </div>
+            <button type="button" id="closeAdminChat" class="close-button" aria-label="Close counseling chat">×</button>
+        </div>
+        <div id="adminChatBody" class="admin-chat-body">
+            <div class="admin-chat-system">Loading conversation...</div>
+        </div>
+        <div class="admin-chat-compose">
+            <input type="text" id="adminChatInput" placeholder="Type your reply..." autocomplete="off" maxlength="2000">
+            <button type="button" id="adminSendMessage">Send</button>
+        </div>
+    </div>
+</div>
 
 <div
     id="toast"

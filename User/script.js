@@ -46,6 +46,19 @@ const appointmentPreview =
 const recordsModal =
     document.getElementById("recordsModal");
 
+const feedbackModal =
+    document.getElementById("feedbackModal");
+const feedbackForm =
+    document.getElementById("feedbackForm");
+const feedbackRating =
+    document.getElementById("feedbackRating");
+const feedbackComments =
+    document.getElementById("feedbackComments");
+const feedbackMessage =
+    document.getElementById("feedbackMessage");
+const submitFeedbackButton =
+    document.getElementById("submitFeedbackButton");
+
 const moodMessage =
     document.getElementById("moodMessage");
 
@@ -76,6 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initializeMoodSystem();
     initializeReservation();
     initializeChat();
+    initializeFeedback();
     initializeKeyboardControls();
 
     setMinimumReservationDate();
@@ -2521,6 +2535,76 @@ function stopChatPolling() {
         );
 
         chatPollTimer = null;
+    }
+}
+
+/* =========================================================
+   STUDENT FEEDBACK
+========================================================= */
+function initializeFeedback() {
+    feedbackForm?.addEventListener("submit", submitFeedback);
+
+    document.querySelectorAll(".feedback-star").forEach(star => {
+        star.addEventListener("click", () => {
+            const rating = Number(star.dataset.rating || 0);
+            if (feedbackRating) {
+                feedbackRating.value = String(rating);
+            }
+            updateFeedbackStars(rating);
+            setFeedbackMessage(`${rating} out of 5 stars selected.`, "");
+        });
+    });
+}
+async function openFeedback() {
+    if (!feedbackModal) return;
+    feedbackModal.classList.add("show");
+    feedbackModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    resetFeedbackForm();
+    if (!currentUser?.email) {
+        setFeedbackMessage("Please log in before submitting feedback.", "error");
+    }
+}
+window.openFeedback = openFeedback;
+function closeFeedback() {
+    if (!feedbackModal) return;
+    feedbackModal.classList.remove("show");
+    feedbackModal.setAttribute("aria-hidden", "true");
+    restoreBodyScroll();
+}
+window.closeFeedback = closeFeedback;
+function resetFeedbackForm() {
+    feedbackForm?.reset();
+    if (feedbackRating) feedbackRating.value = "";
+    updateFeedbackStars(0);
+    setFeedbackMessage("", "");
+    if (submitFeedbackButton) { submitFeedbackButton.disabled = false; submitFeedbackButton.textContent = "Submit Feedback"; }
+}
+function updateFeedbackStars(rating) {
+    document.querySelectorAll(".feedback-star").forEach(star => {
+        const value = Number(star.dataset.rating || 0);
+        const active = value <= Number(rating || 0);
+        star.classList.toggle("selected", active);
+        star.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+}
+function setFeedbackMessage(message, type = "") { if (!feedbackMessage) return; feedbackMessage.textContent = message || ""; feedbackMessage.className = `feedback-message ${type}`.trim(); }
+async function submitFeedback(event) {
+    event.preventDefault();
+    const rating=feedbackRating?.value||"", comments=String(feedbackComments?.value||"").trim();
+    if(!rating){setFeedbackMessage("Please select a rating from 1 to 5 stars.","error");return;}
+    if(!comments){setFeedbackMessage("Please write your feedback.","error");feedbackComments?.focus();return;}
+    if(!currentUser?.email){setFeedbackMessage("Please log in before submitting feedback.","error");return;}
+    if(submitFeedbackButton){submitFeedbackButton.disabled=true;submitFeedbackButton.textContent="Submitting...";}
+    try {
+        await api(`${API_BASE}/student/feedback`,{method:"POST",body:JSON.stringify({Rating:Number(rating),Comments:comments})});
+        setFeedbackMessage("Thank you. Your feedback was submitted successfully.","success");
+        showToast("Feedback submitted","Thank you for sharing your counseling experience.","success");
+        await loadRecords();
+        window.setTimeout(closeFeedback,900);
+    } catch(error) {
+        console.error("Feedback submit error:",error); setFeedbackMessage(error.message||"Unable to submit feedback.","error");
+        if(submitFeedbackButton){submitFeedbackButton.disabled=false;submitFeedbackButton.textContent="Submit Feedback";}
     }
 }
 
